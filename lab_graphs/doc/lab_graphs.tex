@@ -29,13 +29,10 @@ This assignent is located in the \texttt{asst\_graphs} folder.  All commands sho
 \subsection{Extract Graphs}
 Due to size contraints on Github, the graphs are in a zip files and need to be extracted.  Run the following to extract the graphs:
 \begin{lstlisting}
-	cd lab_graphs
 	make unzip_graphs
 \end{lstlisting}
 
 \subsection{Inspect the code}
- Inspect the contents:
-
 \begin{itemize}
 	\item {\tt niGraphs/} -- This folder contains 2333 graphs of customer designs from National Instrument's HLS tool (LabVIEW Communications System Design Suite -- \url{http://www.ni.com/labview-communications/}).  Feel free to look at these files.  You will see each file defines a set of nodes and edges with associated properties.  As we progress through the class material you will learn more about these properties, but you can ignore most of them for now, aside from a few that are specifically mentioned in this assignment.
 	\item {\tt src/niGraphReader/} -- This contains the NIGraphReader class, which will parse the graph files into NIGraph* data structures.
@@ -52,7 +49,7 @@ cmake ../src
 make
 \end{lstlisting}
 
-This will produce an executable located in 
+This will produce an executable located in \texttt{build/main}.  If you change any file contents, you only need to re-run \texttt{make} to recompile.
 If you change contents of the {\tt .cpp/.h} files, you will need to repeat from step 3.  If you add new files, you will need to repeat from step 2.  If you want to clean all temporary files, simply delete the {\tt build} directory and start over from step 1.
 	
 If you are interested in how {\tt cmake} works, you can look at the {\tt CMakeLists.txt} files in {\tt src/} and its subdirectories.
