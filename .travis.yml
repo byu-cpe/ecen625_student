@@ -13,4 +13,5 @@ jobs:
   include:
     - name: latex
       script:
-        cd asst_0/doc && latexmk -pdf
+        cd lab_0/doc && latexmk -pdf
+        cd lab_1/doc && latexmk -pdf
