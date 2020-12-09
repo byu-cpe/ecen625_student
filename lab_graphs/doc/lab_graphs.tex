@@ -21,43 +21,44 @@ The goals of this assignment are to:
 	\item Practice C++ skills.
 \end{itemize}
 
+\section{Preliminary}
+This assignent is located in the \texttt{asst\_graphs} folder.  All commands shown assume you are located in that folder in your terminal.
 
+\subsection{Install Packages}
+
+\subsection{Extract Graphs}
+Due to size contraints on Github, the graphs are in a zip files and need to be extracted.  Run the following to extract the graphs:
+\begin{lstlisting}
+	cd lab_graphs
+	make unzip_graphs
+\end{lstlisting}
 
 \subsection{Inspect the code}
-Take a look at the files that are part of the assignment:
+ Inspect the contents:
+
 \begin{itemize}
-	\item {\tt graphs/} -- This folder contains 2333 graphs of customer designs from National Instrument's HLS tool (LabVIEW Communications System Design Suite -- \url{http://www.ni.com/labview-communications/}).  Feel free to look at these files.  You will see each file defines a set of nodes and edges with associated properties.  As we progress through the class material you will learn more about these properties, but you can ignore most of them for now, aside from a few that are specifically mentioned in this assignment.
+	\item {\tt niGraphs/} -- This folder contains 2333 graphs of customer designs from National Instrument's HLS tool (LabVIEW Communications System Design Suite -- \url{http://www.ni.com/labview-communications/}).  Feel free to look at these files.  You will see each file defines a set of nodes and edges with associated properties.  As we progress through the class material you will learn more about these properties, but you can ignore most of them for now, aside from a few that are specifically mentioned in this assignment.
 	\item {\tt src/niGraphReader/} -- This contains the NIGraphReader class, which will parse the graph files into NIGraph* data structures.
 	\item {\tt src/niGraph/} -- This contains the NIGraph class, as well as NIGraphNode and NIGraphEdge classes, which are the data structures for the graphs.
-	\item {\tt src/625\_asst1.cpp} -- You will add all your code for this assignment in this file.  The {\tt main()} function contains some code that you may find useful for collecting the data you need in this assignment, but change it to fit your needs.
+	\item {\tt src/main.cpp} -- You will need to implement several functions in this file.  You are free to split your code into additional files if you desire.
 \end{itemize}
 
 \subsection{Build the code}
 The project uses {\tt cmake} as a build manager.  {\tt cmake} is a tool that will automatically create necessary makefiles for use with the {\tt make} tool.
-The code can be built using the following steps:
-\begin{enumerate}
-	\item Create a build directory:
-	\begin{lstlisting}
-	mkdir ~/625/asst1/build
-	cd ~/625/asst1/build
-	\end{lstlisting}
-	
-	\item Run {\tt cmake} to create the makefiles based on the code in {\tt src/}:
-	\begin{lstlisting}
-	cmake ../src	
-	\end{lstlisting}
-		
-	\item Build the code using {\tt make}:
-	\begin{lstlisting}
-	make
-	\end{lstlisting}
-	
+The code can be built using the following commands:
+\begin{lstlisting}
+cd build
+cmake ../src
+make
+\end{lstlisting}
+
+This will produce an executable located in 
 If you change contents of the {\tt .cpp/.h} files, you will need to repeat from step 3.  If you add new files, you will need to repeat from step 2.  If you want to clean all temporary files, simply delete the {\tt build} directory and start over from step 1.
 	
 If you are interested in how {\tt cmake} works, you can look at the {\tt CMakeLists.txt} files in {\tt src/} and its subdirectories.
 	
-\end{enumerate}
 
+\section{Requirements}
 
 \section{Deliverables}
 
