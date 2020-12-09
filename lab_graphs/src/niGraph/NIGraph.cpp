@@ -14,7 +14,7 @@
 
 using namespace std;
 
-NIGraph::NIGraph() {
+NIGraph::NIGraph(std::string ID) : ID(ID) {
   // TODO Auto-generated constructor stub
 }
 

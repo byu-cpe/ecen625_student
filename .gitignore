@@ -1,1 +1,18 @@
-/asst1/niGraphs
+# Latex files
+*.aux
+*.bbl
+*.blg
+*_latexmk
+*.fls
+*.log
+*.out
+*.xml
+*.synctex.gz
+*-blx.bib
+
+# Build files
+build
+
+# 
+/lab_graphs/niGraphs
+/lab_graphs/dot

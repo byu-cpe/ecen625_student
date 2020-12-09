@@ -25,7 +25,7 @@ public:
   NIGraphReader();
   virtual ~NIGraphReader();
 
-  NIGraph *parseGraphMlFile(std::string filePath);
+  NIGraph *parseGraphMlFile(std::string ID, std::string filePath);
 };
 
 #endif /* SRC_GRAPHREADER_GRAPHREADER_H_ */

@@ -112,10 +112,10 @@ void NIGraphReader::parseEdge(rapidxml::xml_node<> &node, NIGraph &graph) {
   //	    </edge>
 }
 
-NIGraph *NIGraphReader::parseGraphMlFile(std::string filePath) {
+NIGraph *NIGraphReader::parseGraphMlFile(std::string ID, std::string filePath) {
   assert(fileExists(filePath));
 
-  NIGraph *graph = new NIGraph();
+  NIGraph *graph = new NIGraph(ID);
 
   std::ifstream fin(filePath);
 

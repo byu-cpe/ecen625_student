@@ -20,6 +20,8 @@ typedef std::deque<NIGraphNode *> NIGraphNodeList;
 
 class NIGraph {
 private:
+  std::string ID;
+
   std::vector<NIGraphNode *> nodes;
   std::map<std::string, NIGraphNode *> idMapNode;
 
@@ -27,7 +29,7 @@ private:
   std::map<std::string, NIGraphEdge *> idMapEdge;
 
 public:
-  NIGraph();
+  NIGraph(std::string ID);
   virtual ~NIGraph();
 
   bool nodeListIsTopological(NIGraphNodeList &list);
@@ -37,6 +39,7 @@ public:
 
   std::string stats();
 
+  std::string &getID() { return ID; }
   int getNumNodes() { return nodes.size(); }
   NIGraphNode *findNodeById(std::string id);
 

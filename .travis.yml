@@ -1,0 +1,16 @@
+dist: bionic
+
+dist: bionic
+addons:
+  apt:
+    packages:
+      - texlive-base
+      - texlive-latex-extra
+      - texlive-plain-generic
+      - latexmk
+
+jobs:
+  include:
+    - name: latex
+      script:
+        cd asst_0/doc && latexmk -pdf

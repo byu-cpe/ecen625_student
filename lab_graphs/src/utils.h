@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-typedef unsigned long long timestamp_t;
+typedef uint64_t timestamp_t;
 
 #define MICROSECS_PER_SEC 1000000.0L
 
@@ -20,5 +20,9 @@ inline bool fileExists(const std::string &name) {
 }
 
 std::vector<std::string> glob(const std::string &pat);
+
+std::string exec(const char *cmd);
+
+inline std::string exec(std::string cmd) { return exec(cmd.c_str()); }
 
 #endif /* SRC_COMMON_UTILS_H_ */

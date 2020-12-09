@@ -1,0 +1,241 @@
+\input{../../common/latex_asst_template/asst_template.tex}
+
+\class{ECEN 625}
+\term{Winter 2021}
+\assttitle{Assignment 1: Graphs}
+\duedate{Tuesday, January 15, 2019 11:59pm}
+
+
+\setuppage
+
+\begin{document}
+
+\maketitle
+\thispagestyle{fancy}
+
+\section{Learning Outcomes}
+The goals of this assignment are to:
+\begin{itemize}
+	\item Familiarize yourself with graph algorithms that are most applicable to HLS techniques, namely topological sorting and identifying the critical path.
+	\item Observe the structure of commercial HLS data flow graphs.
+	\item Practice C++ skills.
+\end{itemize}
+
+
+
+\subsection{Inspect the code}
+Take a look at the files that are part of the assignment:
+\begin{itemize}
+	\item {\tt graphs/} -- This folder contains 2333 graphs of customer designs from National Instrument's HLS tool (LabVIEW Communications System Design Suite -- \url{http://www.ni.com/labview-communications/}).  Feel free to look at these files.  You will see each file defines a set of nodes and edges with associated properties.  As we progress through the class material you will learn more about these properties, but you can ignore most of them for now, aside from a few that are specifically mentioned in this assignment.
+	\item {\tt src/niGraphReader/} -- This contains the NIGraphReader class, which will parse the graph files into NIGraph* data structures.
+	\item {\tt src/niGraph/} -- This contains the NIGraph class, as well as NIGraphNode and NIGraphEdge classes, which are the data structures for the graphs.
+	\item {\tt src/625\_asst1.cpp} -- You will add all your code for this assignment in this file.  The {\tt main()} function contains some code that you may find useful for collecting the data you need in this assignment, but change it to fit your needs.
+\end{itemize}
+
+\subsection{Build the code}
+The project uses {\tt cmake} as a build manager.  {\tt cmake} is a tool that will automatically create necessary makefiles for use with the {\tt make} tool.
+The code can be built using the following steps:
+\begin{enumerate}
+	\item Create a build directory:
+	\begin{lstlisting}
+	mkdir ~/625/asst1/build
+	cd ~/625/asst1/build
+	\end{lstlisting}
+	
+	\item Run {\tt cmake} to create the makefiles based on the code in {\tt src/}:
+	\begin{lstlisting}
+	cmake ../src	
+	\end{lstlisting}
+		
+	\item Build the code using {\tt make}:
+	\begin{lstlisting}
+	make
+	\end{lstlisting}
+	
+If you change contents of the {\tt .cpp/.h} files, you will need to repeat from step 3.  If you add new files, you will need to repeat from step 2.  If you want to clean all temporary files, simply delete the {\tt build} directory and start over from step 1.
+	
+If you are interested in how {\tt cmake} works, you can look at the {\tt CMakeLists.txt} files in {\tt src/} and its subdirectories.
+	
+\end{enumerate}
+
+
+\section{Deliverables}
+
+\subsection{Part 1: Visualizing Graphs}
+\label{sec:del1}
+
+For this deliverable you must write code to output an {\tt NIGraph} structure in DOT language.  The code should be added to the following function:
+
+\begin{lstlisting}
+void createDOT(NIGraph * graph, string outputPath) {
+   // add code here
+}
+\end{lstlisting}
+
+The graph should have the following properties:
+\begin{itemize}
+	\item Show all nodes and edges.
+	\item Nodes should be labeled with the node {\tt id}.
+	\item Edges should be labeled with the edge {\tt delay}.
+	\item Feedback edges should be colored in red (vs default of black).
+\end{itemize}
+
+See \url{http://www.graphviz.org/content/dot-language} for the specification of the DOT language.  For example, a simple DAG with two nodes ({\tt a} and {\tt b}) and one edge ({\tt delay} = 3) may have a DOT file like this:
+
+\begin{lstlisting}
+strict digraph {
+  a -> b [label="3"];
+}
+\end{lstlisting}
+When you are building the DOT file, you can assume every node in the graph will have at least one connected edge.  So to build the DOT file you only need to iterate through the edge list, not the node list.
+
+
+You can use the {\tt dot} program to create a graphic from a DOT file.  For example, the following command will create a PDF file (many different file types are supported, see \url{http://www.graphviz.org/doc/info/output.html}):
+\begin{lstlisting}
+dot graph0.dot -Tpdf -o graph0.pdf
+\end{lstlisting}
+
+\begin{figure}[p]
+	\centering
+		\includegraphics[width=\textwidth,height=.9\textheight,keepaspectratio]{graph0.pdf}
+	\caption{DelayGraph\_0}
+	\label{fig:graph0}
+\end{figure}
+
+You may need to install the graphviz package before using the {\tt dot} command:
+\begin{lstlisting}
+sudo apt install graphviz
+\end{lstlisting}
+
+\cref{fig:graph0} provides an example of the visualized graph, for DelayGraph\_0.
+
+
+\paragraph{Deliverables:} Choose any two graphs you like (aside from DelayGraph\_0) and include an image such as \cref{fig:graph0} in your report.  Make sure the graph isn't too large, or it won't be readable.  Anything much larger than the provided example is probably too large.  
+
+\subsection{Part 2: Topological Sorting}
+\label{sec:del2}
+In this part of the assignment you will write code to perform a topological sort of a graph.  See lecture slides, \url{https://en.wikipedia.org/wiki/Topological_sorting}, or search elsewhere online, for topological sorting algorithms.  
+
+
+The code should be added here:
+\begin{lstlisting}
+deque<NIGraphNode*> topologicalSort(NIGraph * graph) {
+	// add code here
+}
+\end{lstlisting}
+The function has a single input, an {\tt NIGraph}, and returns a topologically sorted list of nodes ({\tt NIGraphNode*}).  Topological order is such that for every directed edge $uv$ from node $u$ to node $v$, $u$ comes before $v$ in the ordering.  Since a topological sort is only possible for directed acyclic graphs (DAGs), you will need to \uline{ignore the feedback edges}.  
+
+\paragraph{Deliverables:} Write a short paragraph about how your topological sorting algorithm works.  
+
+Include a scatter plot (\url{https://en.wikipedia.org/wiki/Scatter_plot}), which plots the run-time for your topological sort code for {\bf ALL} 2333 of the provided graphs.  The plot should be of the following format:
+\begin{itemize}
+	\item The x-axis should show the size of the graph ($V + E$)
+	\item The y-axis should show the runtime of the topological sorting.
+	\item Both the x and y axis should be in logarithmic scale, with appropriate ranges to fit your data points.
+\end{itemize}
+
+There are many ways to do a topological sort.  For full marks, your chart data should show that your algorithm complexity is approximately $O(V+E)$.  Please don't spend extra time performing analysis to show this -- just a visual inspection of the scatter plot is fine.
+
+
+\subsection{Part 3: Longest Path}
+\label{sec:del3}
+In this deliverable you will write code to detect the longest delay path in the graph, using the topologically sorted nodes from Part 2.  This code should be written in this function:
+\begin{lstlisting}
+int longestDelayPath(deque<NIGraphNode*> & topolSortedNodes,
+		deque<NIGraphNode*> & longestPath)
+  // add code here
+}
+\end{lstlisting}
+This function has two parameters.  The first accepts a list of nodes sorted in topological order, and the second is a list which is populated with the nodes on the longest path.  The return value of the function is the total delay along the longest delay path.
+
+See lecture slides, \url{https://en.wikipedia.org/wiki/Longest_path_problem}, or search on the web for how to determine the longest path from a topological sort. For a DAG, the longest delay path is also known as the \emph{critical path}.  This term is likely familiar to you in the circuit domain, as combinational logic can be represented using a DAG, and the critical path restricts the maximum frequency of the circuit.  
+
+Again, to ensure the graph is a DAG, you will need to ignore feedback edges.
+
+\paragraph{Deliverables:}
+Include the following data using your longest path code:
+\begin{itemize}
+	\item Include the following table in your report, with all values populated:
+	\begin{table}[h!]
+	\centering
+	\begin{tabular}{|l|r|r|} \hline
+	{\bf Graph} & {\bf size ($V+E$)} & Delay \\ \hline
+	DelayGraph\_0 & 197 & 8077 \\ \hline
+	DelayGraph\_1 &  &  \\ \hline
+	DelayGraph\_2 &  &  \\ \hline
+	DelayGraph\_3 &  &  \\ \hline
+	DelayGraph\_4 &  &  \\ \hline
+	DelayGraph\_5 &  &  \\ \hline
+	DelayGraph\_6 &  &  \\ \hline
+	DelayGraph\_7 &  &  \\ \hline
+	DelayGraph\_8 &  &  \\ \hline
+	DelayGraph\_9 &  &  \\ \hline
+	DelayGraph\_10 &  &  \\ \hline
+
+	\end{tabular}
+	\end{table}
+	
+	\item Include the longest path for DelayGraph\_3.  A function is provided to print the list:
+	\begin{lstlisting}
+	void printNodeList(deque<NIGraphNode*> nodes);
+	\end{lstlisting}
+	
+	For example, the longest path for DelayGraph\_0 is:
+	\begin{lstlisting}
+n0 -> n14 -> n15 -> n19 -> n21 -> n23 -> n24 -> n25 -> n26 -> n27 -> 
+n29 -> n43 -> n44 -> n50 -> n51 -> n56 -> n60 -> n70 -> n71 -> n74 -> 
+n75 -> n78 -> n76 -> n77 -> n79 -> n80 -> n81 -> n82 -> n83 -> n84 -> 
+n88
+
+	\end{lstlisting}
+\end{itemize}
+
+\section{Coding Guidelines}
+\begin{itemize}
+	\item Your code should be added to the {\tt src/522r\_asst1.cpp} file.  You can add additional files if you like, just don't forget to submit them.  You shouldn't change the {\tt niGraph*} files.
+  \item You are free to add extra helper functions, but you should not change the definition of the provided functions. 
+	%\item All graph objects ({\tt NIGraph}, {\tt NIGraphNode}, {\tt NIGraphEdge}) should be allocated by the {\tt parseGraphMlFile()} function.  Do not allocate these objects yourself.  Example object allocations, which you should not do:
+	%\begin{lstlisting}
+	%NIGraphNode * node1 = new NIGraphNode();
+	%NIGraphNode node2;
+	%\end{lstlisting}
+	\item I have made {\tt topologicalSort()} return a  {\tt std::deque} instead of a {\tt std::vector}, as it supports $O(1)$ insertion at the front or back of the list ({\tt std::vector} is $O(n)$ insertion at the front).  Since different topological sorting algorithms require inserting at the front or back, I wanted to provide this functionality.
+	%\item Topological order is such that for every directed edge $uv$ from vertex $u$ to vertex $v$, $u$ comes before $v$ in the ordering.  For the output of {\tt topologicalSort()}, and the input to {\tt longestDelayPathFromTopolSortedNodes()} you are free to use topological or reverse topological ordering.  When I implemented the code, the topological sorting algorithm I used added items to the vector in reverse topological order.  To avoid inserting at the start of the vector, which is $O(n)$, I just inserted items at the end of the vector, which is $O(1)$, and returned the reverse topological ordering.  You should choose the appropriate ordering for the algorithm you use.  (An alternative would be to use a data structure that supported $O(1)$ insertion at the front, such as {\tt std::deque}; however, for simplicity I chose to define the function as returning a {\tt std::vector}).
+	\item It doesn't matter what code you submit in {\tt main()}, you will only be marked on the code in the required functions, and any code that those functions call.
+\end{itemize}
+
+\section{Submission Instructions}
+
+\begin{enumerate}
+	\item 
+
+Submit a report containing the following items:
+\begin{itemize}
+	\item Your name :)
+	\item The two DOT graph images, described in \cref{sec:del1}.
+	\item The paragraph describing your algorithm, and scatter plot, from \cref{sec:del2}.
+	\item The table, and longest path, described in \cref{sec:del3}.
+	\item Feedback about the assignment
+	
+	\begin{itemize}
+		\item How many hours you spent on the assignment?  
+		\item How challenging was the C++ coding?
+		\item Anything you liked?
+		\item Anything you didn't like? Or anything you would change?
+		\item Did you find the assignment worthwhile? Why or why not?
+	\end{itemize}
+\end{itemize}
+
+\item Submit your source code.  If you only change the one .cpp file, then only submit that file.
+\end{enumerate}
+
+
+\textbf{Send your report and code to \href{mailto:jgoeders@byu.edu}{jgoeders@byu.edu} with the subject: 625 Asst1}
+
+\section{Evaluation Criteria}
+The three deliverables will be weighted equally.  You will be marked based on completion, adherence to specification, correctness of code, efficiency of code, and readability of code.
+
+
+
+
+\end{document}

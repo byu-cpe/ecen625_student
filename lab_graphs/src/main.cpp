@@ -7,13 +7,17 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <libgen.h>
 #include <map>
 #include <regex>
+#include <unistd.h>
 #include <vector>
 
 #include "niGraph/NIGraph.h"
 #include "niGraphReader/NIGraphReader.h"
 #include "utils.h"
+
+#define BUF_SIZE 512
 
 // Print a list of nodes
 void printNodeList(const NIGraphNodeList &nodes) {
@@ -33,11 +37,11 @@ void printNodeList(const NIGraphNodeList &nodes) {
 // Create a DOT file of the graph
 // - graph: The graph to output in DOT format
 // - outputPath: The path of the output file
-void createDOT(const NIGraph &graph, const std::string outputPath) {
+void createDOT(const NIGraph &graph, const std::string outputPath,
+               NIGraphNodeList &longestPath,
+               std::map<NIGraphNode *, int> &nodeDelays) {
   // add code here
 
-  void createDOTSoln(const NIGraph &graph, const std::string outputPath);
-  createDOTSoln(graph, outputPath);
 }
 
 // Perform a topological sort of the graph
@@ -47,37 +51,61 @@ NIGraphNodeList topologicalSort(const NIGraph &graph) {
   NIGraphNodeList q;
 
   // add code here
-  NIGraphNodeList topologicalSortSoln(const NIGraph &graph);
-  q = topologicalSortSoln(graph);
+ 
 
   return q;
 }
 
 // Find the longest delay path based on a topological sorting of nodes
 // topolSortedNodes - List of nodes, sorted in topological order
-// longestPath - Return value, list of nodes on longest path, in topological
-// order Return value - Total delay value of longest path
+// longestPath - Return list of nodes on longest path, in topological order
+// nodeDelays - Return map, nodeDelays[node] = longest path to node
+// Return value - Total delay value of longest path
 int longestDelayPath(const NIGraphNodeList &topolSortedNodes,
-                     NIGraphNodeList &longestPath) {
+                     NIGraphNodeList &longestPath,
+                     std::map<NIGraphNode *, int> &nodeDelays) {
   // add code here
+   return 0;
 }
 
 int main(int argc, char *argv[]) {
-  // Parse arguments
-  assert(argc == 1 || argc == 3);
 
-  //
+  // Get path to graphs
+  char buf[BUF_SIZE];
+  readlink("/proc/self/exe", buf, BUF_SIZE);
+
+  char *buildDirPath = dirname(buf);
+  std::string asstDirPath = dirname(buildDirPath);
+  std::string graphDirPath = asstDirPath + "/niGraphs";
+  std::string dotDirPath = asstDirPath + "/dot";
+
+  std::cout << graphDirPath << "\n";
 
   // Get list of graphs in graph directory
-  std::string graphsGlob = "../niGraphs/DelayGraph_*.graphml";
-  std::vector<std::string> graphPaths = glob(graphsGlob);
+  std::string graphsGlob = graphDirPath + "/DelayGraph_*.graphml";
+  std::vector<std::string> graphPaths;
+
+  if (argc == 1) {
+    graphPaths = glob(graphsGlob);
+    std::cout << graphPaths.size() << " graphs found in specified directory\n";
+  } else {
+    for (int i = 1; i < argc; i++) {
+      graphPaths.push_back(std::string("../niGraphs/DelayGraph_") + argv[i] +
+                           ".graphml");
+    }
+    for (auto path : graphPaths) {
+      if (!fileExists(path)) {
+        std::cerr << path << " does not exist.\n";
+        return -1;
+      }
+    }
+  }
 
   // Check that graphs were found
   if (graphPaths.size() == 0) {
     std::cout << "No graphs found in specified directory\n";
     exit(1);
   } else {
-    std::cout << graphPaths.size() << " graphs found in specified directory\n";
   }
 
   // Store graphs in a map by graph #
@@ -97,24 +125,20 @@ int main(int argc, char *argv[]) {
   // Create graph reader object
   NIGraphReader graphReader;
 
-  // Parse graph 0, and create a DOT file
-  NIGraph *graph0 = graphReader.parseGraphMlFile(graphPathsById[0]);
-  createDOT(*graph0, "graph0.dot");
-  delete graph0;
-
   // Open a file to write results out to
   std::ofstream fp;
   fp.open("results.txt");
 
   // Loop through the graphs
   for (auto graphPathIt : graphPathsById) {
+    std::string ID = std::to_string(graphPathIt.first);
     auto graphPath = graphPathIt.second;
 
     // Print which graph we are working on
     std::cout << graphPath << "\n";
 
     // Parse the graph
-    NIGraph *graph = graphReader.parseGraphMlFile(graphPath);
+    NIGraph *graph = graphReader.parseGraphMlFile(ID, graphPath);
 
     // Time the topological sort
     timestamp_t t0 = get_timestamp();
@@ -125,9 +149,20 @@ int main(int argc, char *argv[]) {
 
     // Find the longest path
     int delay;
+    std::map<NIGraphNode *, int> nodeDelays;
+    NIGraphNodeList longestPath;
     if (!err) {
-      NIGraphNodeList longestPath;
-      delay = longestDelayPath(sortedNodes, longestPath);
+      delay = longestDelayPath(sortedNodes, longestPath, nodeDelays);
+    }
+
+    // Create a DOT file (only if we aren't doing all the graphs)
+    if (argc > 1) {
+      std::string dotPath = dotDirPath + "/graph" + graph->getID() + ".dot";
+      std::string pdfPath = dotDirPath + "/graph" + graph->getID() + ".pdf";
+      createDOT(*graph, dotPath, longestPath, nodeDelays);
+      std::string stdout =
+          exec(std::string("dot ") + dotPath + " -Tpdf -o " + pdfPath);
+      std::cout << stdout;
     }
 
     // Write the results out to the file
