@@ -16,5 +16,5 @@ jobs:
   include:
     - name: latex
       script:
-        - cd lab_0/doc && latexmk -pdf
-        - cd ../lab_graphs/doc && latexmk -pdf
+        - cd lab_0/doc && latexmk -pdf && cd -
+        - cd lab_graphs/doc && latexmk -pdf && cd -
