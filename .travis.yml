@@ -9,6 +9,7 @@ addons:
       - texlive-plain-generic
       - texlive-fonts-recommended
       - texlive-science
+      - texlive-bibtex-extra
       - latexmk
 
 jobs:
