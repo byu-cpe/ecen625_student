@@ -41,7 +41,6 @@ void createDOT(const NIGraph &graph, const std::string outputPath,
                NIGraphNodeList &longestPath,
                std::map<NIGraphNode *, int> &nodeDelays) {
   // add code here
-
 }
 
 // Perform a topological sort of the graph
@@ -51,7 +50,6 @@ NIGraphNodeList topologicalSort(const NIGraph &graph) {
   NIGraphNodeList q;
 
   // add code here
- 
 
   return q;
 }
@@ -65,7 +63,7 @@ int longestDelayPath(const NIGraphNodeList &topolSortedNodes,
                      NIGraphNodeList &longestPath,
                      std::map<NIGraphNode *, int> &nodeDelays) {
   // add code here
-   return 0;
+  return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -172,7 +170,13 @@ int main(int argc, char *argv[]) {
          << (t1 - t0) / MICROSECS_PER_SEC << " " << delay << "\n";
     }
 
-    // printNodeList(sortedNodes);
+    if (argc > 1) {
+      std::cout << "Topological sort of nodes:\n";
+      printNodeList(sortedNodes);
+      std::cout << "\nLongest path:\n";
+      printNodeList(longestPath);
+    }
+
     delete graph;
 
     if (err)

@@ -25,6 +25,10 @@ The goals of this assignment are to:
 This assignent is located in the \texttt{asst\_graphs} folder.  All commands shown assume you are located in that folder in your terminal.
 
 \subsection{Install Packages}
+You will need the following packages:
+\begin{lstlisting}
+	sudo apt install cmake graphviz
+\end{lstlisting}
 
 \subsection{Extract Graphs}
 Due to size contraints on Github, the graphs are in a zip files and need to be extracted.  Run the following to extract the graphs:
@@ -49,49 +53,11 @@ cmake ../src
 make
 \end{lstlisting}
 
-This will produce an executable located in \texttt{build/main}.  If you change any file contents, you only need to re-run \texttt{make} to recompile.
-If you change contents of the {\tt .cpp/.h} files, you will need to repeat from step 3.  If you add new files, you will need to repeat from step 2.  If you want to clean all temporary files, simply delete the {\tt build} directory and start over from step 1.
-	
-If you are interested in how {\tt cmake} works, you can look at the {\tt CMakeLists.txt} files in {\tt src/} and its subdirectories.
-	
+This will produce an executable located in \texttt{build/main}.  If you change any file contents, you only need to re-run \texttt{make} to recompile.  If you add new files, you will need to edit the \texttt{src/CMakeLists.txt} file.	
+
+
 
 \section{Requirements}
-
-\section{Deliverables}
-
-\subsection{Part 1: Visualizing Graphs}
-\label{sec:del1}
-
-For this deliverable you must write code to output an {\tt NIGraph} structure in DOT language.  The code should be added to the following function:
-
-\begin{lstlisting}
-void createDOT(NIGraph * graph, string outputPath) {
-   // add code here
-}
-\end{lstlisting}
-
-The graph should have the following properties:
-\begin{itemize}
-	\item Show all nodes and edges.
-	\item Nodes should be labeled with the node {\tt id}.
-	\item Edges should be labeled with the edge {\tt delay}.
-	\item Feedback edges should be colored in red (vs default of black).
-\end{itemize}
-
-See \url{http://www.graphviz.org/content/dot-language} for the specification of the DOT language.  For example, a simple DAG with two nodes ({\tt a} and {\tt b}) and one edge ({\tt delay} = 3) may have a DOT file like this:
-
-\begin{lstlisting}
-strict digraph {
-  a -> b [label="3"];
-}
-\end{lstlisting}
-When you are building the DOT file, you can assume every node in the graph will have at least one connected edge.  So to build the DOT file you only need to iterate through the edge list, not the node list.
-
-
-You can use the {\tt dot} program to create a graphic from a DOT file.  For example, the following command will create a PDF file (many different file types are supported, see \url{http://www.graphviz.org/doc/info/output.html}):
-\begin{lstlisting}
-dot graph0.dot -Tpdf -o graph0.pdf
-\end{lstlisting}
 
 \begin{figure}[p]
 	\centering
@@ -100,32 +66,100 @@ dot graph0.dot -Tpdf -o graph0.pdf
 	\label{fig:graph0}
 \end{figure}
 
-You may need to install the graphviz package before using the {\tt dot} command:
+The goal of this lab is to perform a topological sort of a dataflow graph, identify the longest delay path, and create a graph visualization.  \cref{fig:graph0} shows a the graph for \texttt{DelayGraph\_0.graphml}. 
+Your graphs should have the following properties:
+\begin{itemize}
+	\item Show all nodes and edges. Some nodes don't have edges.
+	\item Nodes should be labeled with the node {\tt id}, and the longest delay path to reach the node.
+	\item Edges should be labeled with the edge {\tt delay}.
+	\item Edges along the longest delay path (ie, the critical path), should be colored red.
+	\item The provided graphs are \textbf{textit{almost}} directed acyclic graphs (DAGs), except for a few \textit{feedback edges}, which create cycles.  These feedback edges should be colored in blue.
+\end{itemize}
+
+\subsection{\texttt{main()}}
+
+The provided main function can be run in two modes:
+
+\begin{description}
+	\item[Mode 1: Selective graphs] You can provide a list of graph numbers as arguments to main: 
+	\begin{lstlisting}
+		./main 1 7 1300
+	\end{lstlisting}
+	For each graph this will perform topological sorting and print the sorted list of nodes, find the longest path, and generate a DOT file and PDF.  Statistics are printed to a \texttt{results.txt} file.
+	\item[Mode 2: All graphs] If you provide no arguments, all graphs will be processed.  The sorted graph nodes won't be printed, and no DOT files will be generated.
+\end{description}
+
+
+\subsection{Part 1: Visualizing Graphs}
+\label{sec:del1}
+
+You must write code to output an {\tt NIGraph} structure in DOT language.  The code should be added to the following function:
+
 \begin{lstlisting}
-sudo apt install graphviz
+void createDOT(const NIGraph &graph, const std::string outputPath,
+    NIGraphNodeList &longestPath,
+    std::map<NIGraphNode *, int> &nodeDelays) {
+  
+}
 \end{lstlisting}
 
-\cref{fig:graph0} provides an example of the visualized graph, for DelayGraph\_0.
+See \url{http://www.graphviz.org/content/dot-language} for the specification of the DOT language.  For example, a simple DAG with two nodes ({\tt a} and {\tt b}) and one edge ({\tt delay} = 3) may have a DOT file like this:
 
+\begin{lstlisting}
+strict digraph {
+  a [label="a\n0"];
+  b [label="b\n3"];
+  a -> b [label=3; color=red];  
+}
+\end{lstlisting}
 
-\paragraph{Deliverables:} Choose any two graphs you like (aside from DelayGraph\_0) and include an image such as \cref{fig:graph0} in your report.  Make sure the graph isn't too large, or it won't be readable.  Anything much larger than the provided example is probably too large.  
+Although the graph visualization relies on the longest path data, it is included first in this document as visualizing the graphs can sometimes be helpful in debugging your sorting or longest path analysis code.  So, I suggest you complete the graph visualization without the longest path data first, then return and finish this step once you have the longest path analysis working.
+
 
 \subsection{Part 2: Topological Sorting}
 \label{sec:del2}
-In this part of the assignment you will write code to perform a topological sort of a graph.  See lecture slides, \url{https://en.wikipedia.org/wiki/Topological_sorting}, or search elsewhere online, for topological sorting algorithms.  
+You will write code to perform a topological sort of a graph.  See lecture slides or \url{https://en.wikipedia.org/wiki/Topological_sorting}.
 
 
 The code should be added here:
 \begin{lstlisting}
-deque<NIGraphNode*> topologicalSort(NIGraph * graph) {
-	// add code here
+NIGraphNodeList topologicalSort(const NIGraph &graph) {
+  NIGraphNodeList q; 
+  // add code here	  
+  return q;
 }
 \end{lstlisting}
 The function has a single input, an {\tt NIGraph}, and returns a topologically sorted list of nodes ({\tt NIGraphNode*}).  Topological order is such that for every directed edge $uv$ from node $u$ to node $v$, $u$ comes before $v$ in the ordering.  Since a topological sort is only possible for directed acyclic graphs (DAGs), you will need to \uline{ignore the feedback edges}.  
 
+\subsection{Part 3: Longest Path}
+\label{sec:del3}
+In this last section you will write code to find the longest delay path in the graph, using the topologically sorted nodes from Part 2.  This code should be written in this function:
+\begin{lstlisting}
+int longestDelayPath(const NIGraphNodeList &topolSortedNodes,
+    NIGraphNodeList &longestPath,
+    std::map<NIGraphNode *, int> &nodeDelays) {
+  // add code here
+}
+\end{lstlisting}
+The first arugment to this function is the topologically sorted list of nodes in the graph.  The function populates two data structures: \texttt{longestPath} should be populated with a list of nodes that make up the longest path, from start to finish, and \texttt{nodeDelays} provides a map indicating the longest delay to each node in the graph.  The delay of the longest path is returned from the function.
+
+See lecture slides, \url{https://en.wikipedia.org/wiki/Longest_path_problem}, or search on the web for how to determine the longest path from a topological sort. For a DAG, the longest delay path is also known as the \emph{critical path}.  This term is likely familiar to you in the circuit domain, as combinational logic can be represented using a DAG, and the critical path restricts the maximum frequency of the circuit.  
+
+Again, to ensure the graph is a DAG, you will \uline{need to ignore feedback edges}. Remember to ignore these edges when finding the longest back, and during the backtracking portion.
+
+
+\section{Deliverables}
+
+\paragraph{Deliverables:} Choose any two graphs you like (aside from DelayGraph\_0) and include an image such as \cref{fig:graph0} in your report.  Make sure the graph isn't too large, or it won't be readable.  Anything much larger than the provided example is probably too large.  
+
+
+
 \paragraph{Deliverables:} Write a short paragraph about how your topological sorting algorithm works.  
 
 Include a scatter plot (\url{https://en.wikipedia.org/wiki/Scatter_plot}), which plots the run-time for your topological sort code for {\bf ALL} 2333 of the provided graphs.  The plot should be of the following format:
+
+
+
 \begin{itemize}
 	\item The x-axis should show the size of the graph ($V + E$)
 	\item The y-axis should show the runtime of the topological sorting.
@@ -134,21 +168,6 @@ Include a scatter plot (\url{https://en.wikipedia.org/wiki/Scatter_plot}), which
 
 There are many ways to do a topological sort.  For full marks, your chart data should show that your algorithm complexity is approximately $O(V+E)$.  Please don't spend extra time performing analysis to show this -- just a visual inspection of the scatter plot is fine.
 
-
-\subsection{Part 3: Longest Path}
-\label{sec:del3}
-In this deliverable you will write code to detect the longest delay path in the graph, using the topologically sorted nodes from Part 2.  This code should be written in this function:
-\begin{lstlisting}
-int longestDelayPath(deque<NIGraphNode*> & topolSortedNodes,
-		deque<NIGraphNode*> & longestPath)
-  // add code here
-}
-\end{lstlisting}
-This function has two parameters.  The first accepts a list of nodes sorted in topological order, and the second is a list which is populated with the nodes on the longest path.  The return value of the function is the total delay along the longest delay path.
-
-See lecture slides, \url{https://en.wikipedia.org/wiki/Longest_path_problem}, or search on the web for how to determine the longest path from a topological sort. For a DAG, the longest delay path is also known as the \emph{critical path}.  This term is likely familiar to you in the circuit domain, as combinational logic can be represented using a DAG, and the critical path restricts the maximum frequency of the circuit.  
-
-Again, to ensure the graph is a DAG, you will need to ignore feedback edges.
 
 \paragraph{Deliverables:}
 Include the following data using your longest path code:
@@ -173,10 +192,7 @@ Include the following data using your longest path code:
 	\end{tabular}
 	\end{table}
 	
-	\item Include the longest path for DelayGraph\_3.  A function is provided to print the list:
-	\begin{lstlisting}
-	void printNodeList(deque<NIGraphNode*> nodes);
-	\end{lstlisting}
+	\item Include the longest path for DelayGraph\_3.  
 	
 	For example, the longest path for DelayGraph\_0 is:
 	\begin{lstlisting}
