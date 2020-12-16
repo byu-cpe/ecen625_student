@@ -16,31 +16,6 @@ static RegisterPass<Scheduler625> X("sched625", "HLS Scheduler for ECEN 625",
                                     false /* Only looks at CFG? */,
                                     true /* Analysis pass? */);
 
-typedef struct {
-  int latency;
-  double delay;
-  int numUnits;
-} FU_t;
-
-FU_t getFU(Instruction &I) {
-  FU_t ret;
-  if (isa<LoadInst>(I)) {
-    ret = {2, 0, 1};
-    return ret;
-  } else if (isa<StoreInst>(I)) {
-    ret = {1, 0, 1};
-    return ret;
-  } else if (isa<ZExtInst>(I) || isa<TruncInst>(I) || isa<ReturnInst>(I)) {
-    ret = {0, 0, 0};
-    return ret;
-  } else if (isa<BinaryOperator>(I)) {
-    ret = {0, 3, 0};
-    return ret;
-  }
-  errs() << I << "\n";
-  assert(false);
-}
-
 Value *findAlloca(Value *v) {
   // assert(isa<LoadInst>(I) || isa<StoreInst>(I));
 
@@ -70,9 +45,9 @@ Value *findAlloca(Value *v) {
 }
 
 bool Scheduler625::runOnFunction(Function &F) {
-  std::vector <
+  // std::vector <
 
-      MemoryDependenceResults &memDep =
+  MemoryDependenceResults &memDep =
       getAnalysis<MemoryDependenceWrapperPass>().getMemDep();
 
   // Print hello world
