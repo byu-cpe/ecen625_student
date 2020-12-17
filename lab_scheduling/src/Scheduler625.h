@@ -12,6 +12,7 @@ public:
   void getAnalysisUsage(AnalysisUsage &Info) const;
 
 private:
+  void scheduleASAP(BasicBlock &bb);
 };
 
 } // namespace llvm

@@ -24,7 +24,12 @@ include(AddLLVM)
 add_definitions ( ${LLVM_DEFINITIONS})
 include_directories ( ${LLVM_INCLUDE_DIRS})
 
-add_llvm_library(scheduler_625 MODULE Scheduler625.cpp FunctionalUnit.cpp PLUGIN_TOOL opt)
+add_llvm_library(scheduler_625 MODULE 
+    Scheduler625.cpp 
+    FunctionalUnit.cpp 
+    SchedHelper.cpp
+    PLUGIN_TOOL opt
+)
 # include_directories ( ${LLVM_INCLUDE_DIRS})
 
 # add_subdirectory (debugStatements)
