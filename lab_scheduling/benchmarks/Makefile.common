@@ -1,7 +1,12 @@
 compile:
-	clang-9 -c -emit-llvm $(NAME).c -o $(NAME).clang.bc
+	clang-9 -O1 -c -emit-llvm -fno-discard-value-names -fno-vectorize -fno-unroll-loops $(NAME).c -o $(NAME).clang.bc
 	llvm-dis-9 $(NAME).clang.bc 
-	opt-9 -load $(LEVEL)/../build/scheduler_625.so -analyze -memdep -sched625 $(NAME).clang.bc
+	opt-9 -load $(LEVEL)/../build/scheduler_625.so -memdep -sched625 $(NAME).clang.bc > /dev/null
+
+	for f in *.tex; do \
+    	pdflatex $$f > latex_$$f.log; \
+	done
+
 
 clean:
 	rm -rf *.bc 
