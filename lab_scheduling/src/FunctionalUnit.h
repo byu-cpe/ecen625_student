@@ -10,28 +10,24 @@ namespace llvm {
 class FunctionalUnit {
 public:
   FunctionalUnit(std::string name, int numUnits)
-      : name(name), numUnits(numUnits) {}
+      : name(name), numUnits(numUnits), initiationInterval(1) {}
+
+  int getNumUnits() { return numUnits; }
+  std::string getName() { return name; }
+  int getInitiationInterval() { return initiationInterval; }
 
 private:
   std::string name;
   int numUnits;
-
-  int latency;
-  double delay;
+  int initiationInterval;
 };
 
-class FunctionalUnits {
-public:
-  FunctionalUnits(Function &F);
-  FunctionalUnit *getFU(Value *v);
+// class FunctionalUnits {
+// public:
+//   FunctionalUnits(Function &F);
 
-private:
-  FunctionalUnit *fabricFU;
+// private:
 
-  std::vector<FunctionalUnit *> FUs;
-  std::map<Value *, FunctionalUnit *> valueToFUmap;
-
-  FunctionalUnit *findOrAllocate(Value *v);
-};
+// };
 
 } // namespace llvm

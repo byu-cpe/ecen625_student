@@ -1,6 +1,11 @@
 #include <llvm/Pass.h>
+#include <map>
 
 namespace llvm {
+
+class Instruction;
+class FunctionHLS;
+class FunctionalUnits;
 
 class Scheduler625 : public llvm::FunctionPass {
 public:
@@ -8,11 +13,24 @@ public:
   Scheduler625() : FunctionPass(ID) {}
 
   bool runOnFunction(Function &F);
-  void print(raw_ostream &OS, const Module *M) const;
-  void getAnalysisUsage(AnalysisUsage &Info) const;
 
 private:
+  std::map<Instruction *, int> schedule;
+  // std::map<BasicBlock *, int> maxCycleNum;
+
+  std::map<Instruction *, int> globalSchedule;
+  std::map<BasicBlock *, int> globalBBStart;
+
+  FunctionalUnits *FUs;
+  FunctionHLS *fHLS;
+
   void scheduleASAP(BasicBlock &bb);
+
+  void scheduleGlobal(Function &F);
+  void validateSchedule(Function &F);
+  void validateSchedule(BasicBlock &bb);
+  void outputScheduleGantt(Function &F);
+  int getMaxCycle(BasicBlock &bb);
 };
 
 } // namespace llvm
