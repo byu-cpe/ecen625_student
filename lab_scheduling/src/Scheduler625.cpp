@@ -37,14 +37,14 @@ bool Scheduler625::runOnFunction(Function &F) {
 
   printSchedule(F);
   scheduleGlobal(F);
-  outputScheduleGantt(F);
   validateSchedule(F);
+  outputScheduleGantt(F);
 
   return false;
 }
 
 void Scheduler625::printSchedule(Function &F) {
-  outs() << "Schedule of function " << F.getName() << "\n";
+  outs() << "\nSchedule of function " << F.getName() << "\n";
   for (auto &bb : F) {
     outs() << "  Basic Block " << bb.getName() << "\n";
     for (int i = 0; i <= getMaxCycle(bb); i++) {
@@ -58,17 +58,19 @@ void Scheduler625::printSchedule(Function &F) {
 }
 
 void Scheduler625::validateSchedule(Function &F) {
+  outs() << "\nValidating Schedule for Function " << F.getName() << "\n";
   for (auto &bb : F) {
     validateSchedule(bb);
   }
 }
 
 void Scheduler625::validateSchedule(BasicBlock &bb) {
-  outs() << "Validating Schedule for BB \"" << bb.getName().str()
-         << "\" of function \"" << bb.getParent()->getName().str() << "\"...\n";
+  outs() << "  BB \"" << bb.getName().str() << "\" of function \""
+         << bb.getParent()->getName().str() << "\"...\n";
 
   // Check that all instructions have been assigned to a state
-  outs() << "  Checking that all instructions have been assigned to a state\n";
+  outs()
+      << "    Checking that all instructions have been assigned to a state\n";
   for (auto &I : bb) {
     bool needsScheduling = SchedHelper::needsScheduling(I);
     bool scheduled = schedule.find(&I) != schedule.end();
@@ -81,7 +83,7 @@ void Scheduler625::validateSchedule(BasicBlock &bb) {
     }
   }
 
-  outs() << "  Checking data dependencies\n";
+  outs() << "    Checking data dependencies\n";
   // Check data dependencies
   for (auto &I : bb) {
     InstructionHLS *Ihls = fHLS->getInsnHLS(I);
@@ -118,7 +120,7 @@ void Scheduler625::validateSchedule(BasicBlock &bb) {
   }
 
   // Check usage of functional units
-  outs() << "  Checking number of functional units used\n";
+  outs() << "    Checking number of functional units used\n";
   // Build fuUsage, which is a mapping of functional unit to second map, which
   // maps the stateNum (int) it is used in, to the list of Instructions that use
   // the FU in that stateNum.
@@ -172,6 +174,8 @@ void Scheduler625::outputScheduleGantt(Function &F) {
   std::string funcName = F.getName();
   // StringRef fileName =
   StringRef fileName = funcName + ".tex";
+
+  outs() << "\n  Creating " << fileName << "\n";
 
   std::error_code EC;
   raw_fd_ostream myfile(fileName, EC);
@@ -256,7 +260,8 @@ void Scheduler625::scheduleGlobal(Function &F) {
   for (auto &bb : F) {
     globalBBStart[&bb] = cycleNum;
     for (auto &I : bb) {
-      globalSchedule[&I] = cycleNum + schedule.at(&I);
+      if (schedule.find(&I) != schedule.end())
+        globalSchedule[&I] = cycleNum + schedule.at(&I);
     }
     cycleNum += getMaxCycle(bb) + 1;
   }
@@ -265,7 +270,7 @@ void Scheduler625::scheduleGlobal(Function &F) {
 int Scheduler625::getMaxCycle(BasicBlock &bb) {
   int maxCycle = 0;
   for (auto &I : bb) {
-    if (!SchedHelper::needsScheduling(I))
+    if (schedule.find(&I) == schedule.end())
       continue;
     maxCycle =
         std::max(maxCycle, schedule.at(&I) +

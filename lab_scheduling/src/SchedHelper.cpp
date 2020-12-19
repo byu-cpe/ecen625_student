@@ -37,7 +37,6 @@ bool SchedHelper::needsScheduling(Instruction &I) {
     return false;
   if (CallInst *CI = dyn_cast<CallInst>(&I)) {
     if (CI->getCalledFunction()->getName().find("llvm.") == 0) {
-      outs() << "CI: " << CI->getCalledFunction()->getName() << "\n";
       return false;
     }
   }
