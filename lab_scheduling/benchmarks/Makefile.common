@@ -4,10 +4,14 @@ ifeq ($(ILP), 1)
 ILP_FLAG = -ILP
 endif
 
+ifdef PERIOD
+PERIOD_OPT = -period=$(PERIOD)
+endif
+
 compile:
 	clang-9 -O1 -c -emit-llvm -fno-discard-value-names -fno-vectorize -fno-unroll-loops $(NAME).c -o $(NAME).clang.bc
 	llvm-dis-9 $(NAME).clang.bc 
-	opt-9 -load $(BUILD_DIR)/scheduler_625.so -sched625 $(ILP_FLAG) $(NAME).clang.bc -o /dev/null
+	opt-9 -load $(BUILD_DIR)/scheduler_625.so -sched625 $(ILP_FLAG) $(PERIOD_OPT) $(NAME).clang.bc -o /dev/null
 
 	# Convert scheduling to Gantt chart
 	for f in *.tex; do \
