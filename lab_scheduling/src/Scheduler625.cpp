@@ -16,6 +16,8 @@
 
 using namespace llvm;
 
+cl::opt<bool> ILPFlag("ILP", cl::desc("Use ILP scheduler instead of ASAP."));
+
 char Scheduler625::ID = 0;
 static RegisterPass<Scheduler625> X("sched625", "HLS Scheduler for ECEN 625",
                                     false /* Only looks at CFG? */,
@@ -27,7 +29,10 @@ bool Scheduler625::runOnFunction(Function &F) {
 
   // Loop through basic blocks
   for (auto &bb : F.getBasicBlockList()) {
-    scheduleASAP(bb);
+    if (ILPFlag)
+      scheduleILP(bb);
+    else
+      scheduleASAP(bb);
   }
 
   validateSchedule(F);
@@ -124,12 +129,12 @@ void Scheduler625::validateSchedule(BasicBlock &bb) {
       auto fuUsageList = fuUsageMap.second;
 
       if (fuUsageList.size() > (unsigned)numAllocated) {
-        outs() << "Functional unit violation.  FU " << FU->getName()
-               << ", which has " << numAllocated << " instances, is used "
+        errs() << "Functional unit violation. FU \"" << FU->getName()
+               << "\", which has " << numAllocated << " instances, is used "
                << fuUsageList.size() << " times in state number " << stateNum
                << ".  The instructions which use the FU are:\n";
         for (auto fuUsageInst : fuUsageList) {
-          outs() << "  " << *fuUsageInst << "\n";
+          errs() << "  " << *fuUsageInst << "\n";
         }
         report_fatal_error("Invalid schedule");
       }

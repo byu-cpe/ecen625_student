@@ -9,6 +9,7 @@
 *.xml
 *.synctex.gz
 *-blx.bib
+*.tex
 
 # LLVM
 *.ll

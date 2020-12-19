@@ -26,6 +26,9 @@ include(AddLLVM)
 add_definitions ( ${LLVM_DEFINITIONS})
 include_directories ( ${LLVM_INCLUDE_DIRS})
 
+# add_compile_options("-D_REENTRANT")
+# add_compile_options("-fPIC")
+
 add_llvm_library(scheduler_625 MODULE 
     Scheduler625.cpp 
     Scheduler625soln.cpp
@@ -35,6 +38,9 @@ add_llvm_library(scheduler_625 MODULE
     InstructionHLS.cpp
     PLUGIN_TOOL opt
 )
+target_link_libraries(scheduler_625 lpsolve55_pic)
+
+
 # include_directories ( ${LLVM_INCLUDE_DIRS})
 
 # add_subdirectory (debugStatements)

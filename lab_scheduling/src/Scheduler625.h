@@ -25,6 +25,7 @@ private:
   FunctionHLS *fHLS;
 
   void scheduleASAP(BasicBlock &bb);
+  void scheduleILP(BasicBlock &bb);
 
   void scheduleGlobal(Function &F);
   void validateSchedule(Function &F);
