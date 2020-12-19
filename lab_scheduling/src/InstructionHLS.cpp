@@ -36,11 +36,9 @@ InstructionHLS::InstructionHLS(FunctionHLS &F, Instruction &I) : I(I) {
     if (&Idep == &I)
       break;
 
-    // if (!isa<LoadInst>(&I1) && !isa<StoreInst>(&I1) && !isa<CallInst>(&I1))
-    //   continue;
-
-    // if (isaDummyCall(I1))
-    //   continue;
+    // ignore instructions that aren't scheduled
+    if (!SchedHelper::needsScheduling(Idep))
+      continue;
 
     if (F.hasMemoryDependency(Idep, I) &&
         (std::find(deps.begin(), deps.end(), &Idep) == deps.end())) {

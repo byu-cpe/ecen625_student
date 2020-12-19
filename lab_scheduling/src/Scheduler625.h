@@ -28,6 +28,7 @@ private:
   void scheduleILP(BasicBlock &bb);
 
   void scheduleGlobal(Function &F);
+  void printSchedule(Function &F);
   void validateSchedule(Function &F);
   void validateSchedule(BasicBlock &bb);
   void outputScheduleGantt(Function &F);

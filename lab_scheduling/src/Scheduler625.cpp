@@ -35,11 +35,26 @@ bool Scheduler625::runOnFunction(Function &F) {
       scheduleASAP(bb);
   }
 
-  validateSchedule(F);
+  printSchedule(F);
   scheduleGlobal(F);
   outputScheduleGantt(F);
+  validateSchedule(F);
 
   return false;
+}
+
+void Scheduler625::printSchedule(Function &F) {
+  outs() << "Schedule of function " << F.getName() << "\n";
+  for (auto &bb : F) {
+    outs() << "  Basic Block " << bb.getName() << "\n";
+    for (int i = 0; i <= getMaxCycle(bb); i++) {
+      outs() << "   Cycle " << i << "\n";
+      for (auto it : schedule) {
+        if ((it.second == i) && (it.first->getParent() == &bb))
+          outs() << "      " << *(it.first) << "\n";
+      }
+    }
+  }
 }
 
 void Scheduler625::validateSchedule(Function &F) {
@@ -55,10 +70,13 @@ void Scheduler625::validateSchedule(BasicBlock &bb) {
   // Check that all instructions have been assigned to a state
   outs() << "  Checking that all instructions have been assigned to a state\n";
   for (auto &I : bb) {
-    // InstructionNode *in = dag->getInstructionNode(&I);
-    // bool mapped = map->getInsnIsMapped(in);
-    if (schedule.find(&I) == schedule.end()) {
+    bool needsScheduling = SchedHelper::needsScheduling(I);
+    bool scheduled = schedule.find(&I) != schedule.end();
+    if (needsScheduling && !scheduled) {
       errs() << "Instruction is not mapped to a state:\n" << I << "\n";
+      report_fatal_error("Invalid schedule");
+    } else if (!needsScheduling && scheduled) {
+      errs() << "Instruction should not be scheduled:\n" << I << "\n";
       report_fatal_error("Invalid schedule");
     }
   }
@@ -67,11 +85,13 @@ void Scheduler625::validateSchedule(BasicBlock &bb) {
   // Check data dependencies
   for (auto &I : bb) {
     InstructionHLS *Ihls = fHLS->getInsnHLS(I);
+    if (!SchedHelper::needsScheduling(I))
+      continue;
 
-    unsigned stateNum = schedule[&I];
+    unsigned stateNum = schedule.at(&I);
 
     for (auto Idep : Ihls->getDeps()) {
-      unsigned stateNumDep = schedule[Idep];
+      unsigned stateNumDep = schedule.at(Idep);
 
       if (stateNum < (stateNumDep + SchedHelper::getInsnLatency(*Idep))) {
         errs() << "Data dependence violation.  "
@@ -88,7 +108,7 @@ void Scheduler625::validateSchedule(BasicBlock &bb) {
   }
 
   // Check Terminator
-  int terminatorCycle = schedule[bb.getTerminator()];
+  int terminatorCycle = schedule.at(bb.getTerminator());
   int lastCycle = getMaxCycle(bb);
   if (terminatorCycle < lastCycle) {
     errs() << "Terminating instruction \"" << *(bb.getTerminator())
@@ -109,7 +129,7 @@ void Scheduler625::validateSchedule(BasicBlock &bb) {
     FunctionalUnit *FU = fHLS->getFU(I);
     if (!FU)
       continue;
-    unsigned stateNum = schedule[&I];
+    unsigned stateNum = schedule.at(&I);
     fuUsage[FU][stateNum].push_back(&I);
   }
 
@@ -236,7 +256,7 @@ void Scheduler625::scheduleGlobal(Function &F) {
   for (auto &bb : F) {
     globalBBStart[&bb] = cycleNum;
     for (auto &I : bb) {
-      globalSchedule[&I] = cycleNum + schedule[&I];
+      globalSchedule[&I] = cycleNum + schedule.at(&I);
     }
     cycleNum += getMaxCycle(bb) + 1;
   }
@@ -245,8 +265,10 @@ void Scheduler625::scheduleGlobal(Function &F) {
 int Scheduler625::getMaxCycle(BasicBlock &bb) {
   int maxCycle = 0;
   for (auto &I : bb) {
+    if (!SchedHelper::needsScheduling(I))
+      continue;
     maxCycle =
-        std::max(maxCycle, schedule[&I] +
+        std::max(maxCycle, schedule.at(&I) +
                                std::max(SchedHelper::getInsnLatency(I) - 1, 0));
   }
   return maxCycle;

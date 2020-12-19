@@ -35,5 +35,11 @@ int SchedHelper::getInsnLatency(Instruction &I) {
 bool SchedHelper::needsScheduling(Instruction &I) {
   if (isa<AllocaInst>(&I) || isa<PHINode>(&I))
     return false;
+  if (CallInst *CI = dyn_cast<CallInst>(&I)) {
+    if (CI->getCalledFunction()->getName().find("llvm.") == 0) {
+      outs() << "CI: " << CI->getCalledFunction()->getName() << "\n";
+      return false;
+    }
+  }
   return true;
 }

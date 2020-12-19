@@ -10,6 +10,7 @@
 *.synctex.gz
 *-blx.bib
 *.tex
+*.pdf
 
 # LLVM
 *.ll
