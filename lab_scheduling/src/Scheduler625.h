@@ -24,6 +24,8 @@ private:
   FunctionalUnits *FUs;
   FunctionHLS *fHLS;
 
+  double clockPeriodConstraint;
+
   void scheduleASAP(BasicBlock &bb);
   void scheduleILP(BasicBlock &bb);
 

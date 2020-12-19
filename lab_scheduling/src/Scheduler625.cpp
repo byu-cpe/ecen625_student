@@ -3,6 +3,7 @@
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <list>
 #include <llvm/IR/CFG.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Instructions.h>
@@ -17,6 +18,7 @@
 using namespace llvm;
 
 cl::opt<bool> ILPFlag("ILP", cl::desc("Use ILP scheduler instead of ASAP."));
+cl::opt<double> PeriodOpt("period");
 
 char Scheduler625::ID = 0;
 static RegisterPass<Scheduler625> X("sched625", "HLS Scheduler for ECEN 625",
@@ -26,6 +28,9 @@ static RegisterPass<Scheduler625> X("sched625", "HLS Scheduler for ECEN 625",
 bool Scheduler625::runOnFunction(Function &F) {
   // FUs = new FunctionalUnits(F);
   fHLS = new FunctionHLS(F);
+
+  clockPeriodConstraint = PeriodOpt;
+  SchedHelper::setTargetClockPeriod(clockPeriodConstraint);
 
   // Loop through basic blocks
   for (auto &bb : F.getBasicBlockList()) {
@@ -167,10 +172,103 @@ void Scheduler625::validateSchedule(BasicBlock &bb) {
       }
     }
   }
+
+  if (clockPeriodConstraint == 0)
+    return;
+
+  // Check critical paths
+  outs() << "    Checking critical path\n";
+  std::map<unsigned, std::vector<Instruction *>> insnsByStateNum;
+  for (auto &I : bb) {
+    if (!SchedHelper::needsScheduling(I))
+      continue;
+    unsigned stateNum = schedule.at(&I);
+    insnsByStateNum[stateNum].push_back(&I);
+  }
+
+  for (auto insnsForState : insnsByStateNum) {
+    // Find longest delay in instructions for this state,
+    // which is guaranteed to be a topologically sorted DAG
+    std::map<Instruction *, double> delays;
+
+    // Initialize all nodes to 0
+    for (auto I : insnsForState.second) {
+      delays[I] = 0;
+    }
+
+    // Propagate delays
+    for (auto I : insnsForState.second) {
+      for (auto use = I->user_begin(), use_end = I->user_end(); use != use_end;
+           use++) {
+        if (Instruction *Iuse = dyn_cast<Instruction>(*use)) {
+          if (delays.find(Iuse) == delays.end())
+            continue;
+          delays[Iuse] =
+              std::max(delays[Iuse], delays[I] + SchedHelper::getInsnDelay(*I));
+        }
+      }
+    }
+
+    // Find max delay
+    auto maxDelayIt =
+        std::max_element(delays.begin(), delays.end(),
+                         [](const std::pair<Instruction *, double> a,
+                            const std::pair<Instruction *, double> b) {
+                           return a.second < b.second;
+                         });
+
+    // Find path
+    std::list<Instruction *> path;
+    Instruction *I = (*maxDelayIt).first;
+
+    // outs() << (*maxDelayIt).first << "\n";
+    // outs() << (*maxDelayIt).second << "\n";
+
+    while (1) {
+      // outs() << "I:" << *I << "\n";
+      path.push_front(I);
+
+      // Check if there are dependencies
+      bool found = false;
+      bool depsInThisCycleExist = false;
+      for (auto dep = I->op_begin(), dep_end = I->op_end(); dep != dep_end;
+           dep++) {
+        // outs() << "  dep: " << **dep << "\n";
+        Instruction *Idep = dyn_cast<Instruction>(*dep);
+        if (!Idep)
+          continue;
+        if (delays.find(Idep) == delays.end())
+          continue;
+        depsInThisCycleExist = true;
+        if ((delays[Idep] + SchedHelper::getInsnDelay(*Idep)) == delays[I]) {
+          I = Idep;
+          found = true;
+          break;
+        }
+      }
+      if (!depsInThisCycleExist)
+        break;
+      assert(found);
+    }
+
+    if ((*maxDelayIt).second > clockPeriodConstraint) {
+      errs() << "Timing violation in function " << bb.getParent()->getName()
+             << " basic block " << bb.getName()
+             << ".  Longest chained delay path is " << (*maxDelayIt).second
+             << " ns, which violates the clock period of "
+             << clockPeriodConstraint << " ns. "
+             << "The violating path contains the following instructions:\n";
+      // errs() << path.size() << "\n";
+      for (auto I : path) {
+        errs() << "  " << *I << " (delay " << SchedHelper::getInsnDelay(*I)
+               << "ns)\n";
+      }
+      report_fatal_error("Invalid schedule");
+    }
+  }
 }
 
 void Scheduler625::outputScheduleGantt(Function &F) {
-
   std::string funcName = F.getName();
   // StringRef fileName =
   StringRef fileName = funcName + ".tex";
