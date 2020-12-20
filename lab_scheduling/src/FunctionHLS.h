@@ -1,36 +1,30 @@
 #include <llvm/IR/Function.h>
+#include <map>
+#include <vector>
 
 namespace llvm {
 
+class Instruction;
 class InstructionHLS;
 class FunctionalUnit;
 
 class FunctionHLS {
 public:
   FunctionHLS(Function &F);
-  InstructionHLS *getInsnHLS(Instruction &I) {
-    // if (insnHLSmap.find(&I) == insnHLSmap.end()) {
-    //   errs() << I << "\n";
-    //   report_fatal_error("getInsnHLS failed");
-    // }
-
-    return insnHLSmap[&I];
-  }
 
   FunctionalUnit *getFU(Instruction &I);
-  // Dependencies
-  bool hasMemoryDependency(Instruction &I1, Instruction &I2);
+  std::vector<Instruction *> &getDeps(Instruction &I);
 
 private:
-  Function *I;
-  std::map<Instruction *, InstructionHLS *> insnHLSmap;
+  // Dependencies
+  std::map<Instruction *, std::vector<Instruction *>> deps;
 
   // Functional Units
   FunctionalUnit *fabricFU;
-  //   std::vector<FunctionalUnit *> FUs;
-  //   std::map<Value *
   std::map<Value *, FunctionalUnit *> valToRAMmap;
   std::map<Instruction *, FunctionalUnit *> insnToFUmap;
+
+  bool hasMemoryDependency(Instruction &I1, Instruction &I2);
   FunctionalUnit *allocate(Instruction &I);
   FunctionalUnit *findOrAllocateRAM(Value &v);
 };

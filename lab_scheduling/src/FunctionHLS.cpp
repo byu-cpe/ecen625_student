@@ -4,7 +4,6 @@
 #include <llvm/IR/Instructions.h>
 
 #include "FunctionalUnit.h"
-#include "InstructionHLS.h"
 #include "SchedHelper.h"
 
 using namespace llvm;
@@ -22,17 +21,67 @@ FunctionHLS::FunctionHLS(Function &F) {
 
   for (auto &bb : F) {
     for (auto &I : bb) {
-      insnHLSmap[&I] = new InstructionHLS(*this, I);
+
+      // Build instruction dependencies
+      // Find data dependencies
+      if (!SchedHelper::needsScheduling(I))
+        continue;
+
+      auto &Ideps = deps[&I];
+
+      for (auto operand = I.op_begin(), end = I.op_end(); operand != end;
+           ++operand) {
+
+        // ignore operands that aren't instructions
+        Instruction *Idep = dyn_cast<Instruction>(*operand);
+        if (!Idep)
+          continue;
+
+        // ignore instructions that aren't scheduled
+        if (!SchedHelper::needsScheduling(*Idep))
+          continue;
+
+        // ignore operands from other basic blocks
+        if (Idep->getParent() != I.getParent())
+          continue;
+
+        Ideps.push_back(Idep);
+      }
+
+      // Find memory dependencies (Idep->I)
+      for (auto &Idep : *(I.getParent())) {
+        // If we reach I, stop
+        if (&Idep == &I)
+          break;
+
+        // ignore instructions that aren't scheduled
+        if (!SchedHelper::needsScheduling(Idep))
+          continue;
+
+        if (hasMemoryDependency(Idep, I) &&
+            (std::find(Ideps.begin(), Ideps.end(), &Idep) == Ideps.end())) {
+          Ideps.push_back(&Idep);
+        }
+      }
     }
   }
-  // Build instruction dependencies
 }
 
 FunctionalUnit *FunctionHLS::getFU(Instruction &I) {
+  // if (!SchedHelper::needsScheduling(I))
+  //   report_fatal_error(
+  //       "FunctionHLS::getFU called on non-schedulable instruction\n");
   if (insnToFUmap.find(&I) == insnToFUmap.end())
     return NULL;
   else
     return insnToFUmap[&I];
+}
+
+std::vector<Instruction *> &FunctionHLS::getDeps(Instruction &I) {
+  if (!SchedHelper::needsScheduling(I))
+    report_fatal_error(
+        "FunctionHLS::getDeps called on non-schedulable instruction\n");
+  return deps.at(&I);
 }
 
 FunctionalUnit *FunctionHLS::findOrAllocateRAM(Value &v) {
@@ -96,12 +145,14 @@ FunctionalUnit *FunctionHLS::allocate(Instruction &I) {
 
   // New functional unit needs to be created
   //   if (AllocaInst *AI = dyn_cast<AllocaInst>(&I)) {
-  //     fu = new FunctionalUnit(AI->getName(), FUNCTIONAL_UNIT_NUM_MEM_PORTS);
+  //     fu = new FunctionalUnit(AI->getName(),
+  //     FUNCTIONAL_UNIT_NUM_MEM_PORTS);
   //     // FUs.push_back(fu);
   //   }
 
   //   if (GlobalVariable *GV = dyn_cast<GlobalVariable>(&I)) {
-  //     fu = new FunctionalUnit(GV->getName(), FUNCTIONAL_UNIT_NUM_MEM_PORTS);
+  //     fu = new FunctionalUnit(GV->getName(),
+  //     FUNCTIONAL_UNIT_NUM_MEM_PORTS);
   //     // FUs.push_back(fu);
   //   }
 
@@ -135,8 +186,8 @@ FunctionalUnit *FunctionHLS::allocate(Instruction &I) {
 }
 
 bool FunctionHLS::hasMemoryDependency(Instruction &I1, Instruction &I2) {
-  // All loads/stores after a call instruction are dependent upon it because of
-  // possible side affects
+  // All loads/stores after a call instruction are dependent upon it because
+  // of possible side affects
   if (isa<CallInst>(I1)) {
     return true;
   }

@@ -12,7 +12,6 @@
 
 #include "FunctionHLS.h"
 #include "FunctionalUnit.h"
-#include "InstructionHLS.h"
 #include "SchedHelper.h"
 
 using namespace llvm;
@@ -91,13 +90,12 @@ void Scheduler625::validateSchedule(BasicBlock &bb) {
   outs() << "    Checking data dependencies\n";
   // Check data dependencies
   for (auto &I : bb) {
-    InstructionHLS *Ihls = fHLS->getInsnHLS(I);
     if (!SchedHelper::needsScheduling(I))
       continue;
 
     unsigned stateNum = schedule.at(&I);
 
-    for (auto Idep : Ihls->getDeps()) {
+    for (auto Idep : fHLS->getDeps(I)) {
       unsigned stateNumDep = schedule.at(Idep);
 
       if (stateNum < (stateNumDep + SchedHelper::getInsnLatency(*Idep))) {
@@ -330,7 +328,7 @@ void Scheduler625::outputScheduleGantt(Function &F) {
 
       // Add links
       elemMap[&I] = elem;
-      for (auto dep : fHLS->getInsnHLS(I)->getDeps()) {
+      for (auto dep : fHLS->getDeps(I)) {
         myfile << "\\ganttlink{elem" << elemMap[dep] << "}{elem" << elem
                << "}\n";
       }

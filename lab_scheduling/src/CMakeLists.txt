@@ -35,7 +35,6 @@ add_llvm_library(scheduler_625 MODULE
     FunctionalUnit.cpp 
     SchedHelper.cpp
     FunctionHLS.cpp
-    InstructionHLS.cpp
     PLUGIN_TOOL opt
 )
 target_link_libraries(scheduler_625 lpsolve55_pic)
