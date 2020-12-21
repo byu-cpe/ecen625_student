@@ -8,9 +8,18 @@ ifdef PERIOD
 PERIOD_OPT = -period=$(PERIOD)
 endif
 
-schedule:
-	clang-9 -O1 -c -emit-llvm -fno-discard-value-names -fno-vectorize -fno-unroll-loops $(NAME).c -o $(NAME).clang.bc
-	llvm-dis-9 $(NAME).clang.bc 
+default:
+	@echo "Run 'make llmv' or 'make schedule'"
+
+$(NAME).clang.bc: $(NAME).c
+	clang-9 -O1 -c -emit-llvm -fno-discard-value-names -fno-vectorize -fno-unroll-loops $^ -o $@
+
+$(NAME).clang.ll: $(NAME).clang.bc
+	llvm-dis-9 $^
+
+llvm: $(NAME).clang.ll
+
+schedule: $(NAME).clang.ll
 	opt-9 -load $(SCHED_BUILD_DIR)/scheduler_625.so -sched625 $(ILP_FLAG) $(PERIOD_OPT) $(NAME).clang.bc -o /dev/null
 
 	# Convert scheduling to Gantt chart
