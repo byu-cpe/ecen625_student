@@ -1,12 +1,5 @@
-/*
- * AdderTreeBalancer.h
- *
- *  Created on: Feb 11, 2017
- *      Author: jgoeders
- */
-
-#ifndef LLVM_LIB_TRANSFORMS_LEGUP_ADDERTREEBALANCER_H_
-#define LLVM_LIB_TRANSFORMS_LEGUP_ADDERTREEBALANCER_H_
+#ifndef LAB_LLVM_SRC_ADDERTREEBALANCER
+#define LAB_LLVM_SRC_ADDERTREEBALANCER
 
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/InstrTypes.h"
@@ -14,20 +7,18 @@
 
 #include <deque>
 
-using namespace llvm;
-
-namespace legup {
+namespace llvm {
 
 class AdderTreeBalancer : public BasicBlockPass {
-  public:
-    AdderTreeBalancer();
-    virtual ~AdderTreeBalancer();
+public:
+  static char ID;
 
-    static char ID;
+  AdderTreeBalancer() : BasicBlockPass(ID) {}
+  ~AdderTreeBalancer() {}
 
-  private:
-  public:
-    bool runOnBasicBlock(BasicBlock &BB);
+private:
+public:
+  bool runOnBasicBlock(BasicBlock &BB);
 };
-}
-#endif /* LLVM_LIB_TRANSFORMS_LEGUP_ADDERTREEBALANCER_H_ */
+} // namespace llvm
+#endif /* LAB_LLVM_SRC_ADDERTREEBALANCER */

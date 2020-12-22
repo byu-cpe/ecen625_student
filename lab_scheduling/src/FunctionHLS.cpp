@@ -129,11 +129,6 @@ FunctionalUnit *FunctionHLS::allocate(Instruction &I) {
 
   FunctionalUnit *fu = NULL;
 
-  //   if (GetElementPtrInst *GEP = dyn_cast<GetElementPtrInst>(&I)) {
-  //     fu = fabricFU;
-  //     // fu = allocate(*(GEP->getOperand(0)));
-  //   }
-
   // Memories
   if (LoadInst *LI = dyn_cast<LoadInst>(&I)) {
     fu = findOrAllocateRAM(*(LI->getPointerOperand()));
@@ -143,21 +138,9 @@ FunctionalUnit *FunctionHLS::allocate(Instruction &I) {
     fu = findOrAllocateRAM(*(SI->getPointerOperand()));
   }
 
-  // New functional unit needs to be created
-  //   if (AllocaInst *AI = dyn_cast<AllocaInst>(&I)) {
-  //     fu = new FunctionalUnit(AI->getName(),
-  //     FUNCTIONAL_UNIT_NUM_MEM_PORTS);
-  //     // FUs.push_back(fu);
-  //   }
-
-  //   if (GlobalVariable *GV = dyn_cast<GlobalVariable>(&I)) {
-  //     fu = new FunctionalUnit(GV->getName(),
-  //     FUNCTIONAL_UNIT_NUM_MEM_PORTS);
-  //     // FUs.push_back(fu);
-  //   }
-
   // These use the FPGA fabric
-  if (isa<CastInst>(I) || isa<CmpInst>(I) || isa<GetElementPtrInst>(I)) {
+  if (isa<CastInst>(I) || isa<CmpInst>(I) || isa<GetElementPtrInst>(I) ||
+      isa<SelectInst>(I)) {
     fu = fabricFU;
   }
 

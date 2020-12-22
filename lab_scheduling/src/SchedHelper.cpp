@@ -9,12 +9,12 @@ int SchedHelper::getInsnLatency(Instruction &I) {
     return 2;
   if (isa<StoreInst>(&I))
     return 1;
-  if (isa<UnaryInstruction>(&I) || isa<CmpInst>(&I) ||
-      isa<GetElementPtrInst>(&I))
-    return 0;
   if (isa<CallInst>(&I) || isa<ReturnInst>(&I))
     return 1;
   if (isa<BranchInst>(&I) || isa<PHINode>(&I))
+    return 0;
+  if (isa<UnaryInstruction>(&I) || isa<CmpInst>(&I) ||
+      isa<GetElementPtrInst>(&I) || isa<SelectInst>(&I))
     return 0;
   if (BinaryOperator *BO = dyn_cast<BinaryOperator>(&I)) {
     switch (BO->getOpcode()) {
@@ -57,6 +57,8 @@ double SchedHelper::getInsnDelay(Instruction &I) {
     }
   } else if (isa<CmpInst>(&I)) {
     return 3.0;
+  } else if (isa<SelectInst>(&I)) {
+    return 3.8;
   }
 
   errs() << I << "\n";
