@@ -2,8 +2,6 @@
 
 using namespace llvm;
 
-double SchedHelper::targetClockPeriod = -1.0;
-
 int SchedHelper::getInsnLatency(Instruction &I) {
   if (isa<LoadInst>(&I))
     return 2;
@@ -34,11 +32,8 @@ int SchedHelper::getInsnLatency(Instruction &I) {
 }
 
 double SchedHelper::getInsnDelay(Instruction &I) {
-  if (targetClockPeriod < 0)
-    report_fatal_error("SchedHelper::setTargetClockPeriod not called");
-
   if (isa<LoadInst>(&I) || isa<StoreInst>(&I))
-    return targetClockPeriod;
+    return 5.0;
   else if (I.isCast() || I.isTerminator() || isa<CallInst>(&I) ||
            isa<GetElementPtrInst>(&I))
     return 0;

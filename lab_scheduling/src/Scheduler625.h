@@ -1,4 +1,5 @@
 #include <llvm/Pass.h>
+#include <llvm/Support/raw_ostream.h>
 #include <map>
 
 namespace llvm {
@@ -16,7 +17,6 @@ public:
 
 private:
   std::map<Instruction *, int> schedule;
-  // std::map<BasicBlock *, int> maxCycleNum;
 
   std::map<Instruction *, int> globalSchedule;
   std::map<BasicBlock *, int> globalBBStart;
@@ -30,10 +30,11 @@ private:
   void scheduleILP(BasicBlock &bb);
 
   void scheduleGlobal(Function &F);
-  void printSchedule(Function &F);
-  void validateSchedule(Function &F);
-  void validateSchedule(BasicBlock &bb);
-  void outputScheduleGantt(Function &F);
+  void reportSchedule(Function &F, raw_fd_ostream &scheduleFile);
+  void validateScheduleAndReportTiming(Function &F, raw_fd_ostream &timingFile);
+  void validateScheduleAndReportTiming(BasicBlock &bb,
+                                       raw_fd_ostream &timingFile);
+  void outputScheduleGantt(Function &F, raw_fd_ostream &ganttFile);
   int getMaxCycle(BasicBlock &bb);
 };
 

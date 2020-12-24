@@ -19,4 +19,3 @@ add_llvm_library(ATB_625 MODULE
     AdderTreeBalancer.cpp
     PLUGIN_TOOL opt
 )
-# target_link_libraries(ATB_625 lpsolve55_pic)

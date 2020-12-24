@@ -15,6 +15,7 @@
 # LLVM
 *.ll
 *.bc
+*.rpt
 
 # Build files
 build

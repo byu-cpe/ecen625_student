@@ -17,6 +17,8 @@
 using namespace llvm;
 
 cl::opt<bool> ILPFlag("ILP", cl::desc("Use ILP scheduler instead of ASAP."));
+cl::opt<bool> QuietFlag("quietSched", cl::desc("Only print error messages"),
+                        cl::init(false));
 cl::opt<double> PeriodOpt("period");
 
 char Scheduler625::ID = 0;
@@ -29,7 +31,6 @@ bool Scheduler625::runOnFunction(Function &F) {
   fHLS = new FunctionHLS(F);
 
   clockPeriodConstraint = PeriodOpt;
-  SchedHelper::setTargetClockPeriod(clockPeriodConstraint);
 
   // Loop through basic blocks
   for (auto &bb : F.getBasicBlockList()) {
@@ -39,42 +40,70 @@ bool Scheduler625::runOnFunction(Function &F) {
       scheduleASAP(bb);
   }
 
-  printSchedule(F);
+  std::error_code EC;
+
+  std::string timingRptName = F.getName().str() + ".timing.rpt";
+  std::string scheduleRptName = F.getName().str() + ".schedule.rpt";
+  std::string ganttRptName = F.getName().str() + ".tex";
+
+  raw_fd_ostream scheduleRpt(scheduleRptName, EC);
+  if (EC.value())
+    report_fatal_error("Could not open schedule rpt: " + scheduleRptName);
+
+  raw_fd_ostream timingRpt(timingRptName, EC);
+  if (EC.value())
+    report_fatal_error("Could not open" + timingRptName);
+
+  raw_fd_ostream ganttRpt(ganttRptName, EC);
+  if (EC.value())
+    report_fatal_error("Could not open" + ganttRptName);
+
   scheduleGlobal(F);
-  validateSchedule(F);
-  outputScheduleGantt(F);
+  reportSchedule(F, scheduleRpt);
+  validateScheduleAndReportTiming(F, timingRpt);
+  outputScheduleGantt(F, ganttRpt);
+
+  scheduleRpt.close();
+  timingRpt.close();
+  ganttRpt.close();
 
   return false;
 }
 
-void Scheduler625::printSchedule(Function &F) {
-  outs() << "\nSchedule of function " << F.getName() << "\n";
+void Scheduler625::reportSchedule(Function &F, raw_fd_ostream &scheduleFile) {
   for (auto &bb : F) {
-    outs() << "  Basic Block " << bb.getName() << "\n";
+    scheduleFile << "Basic Block " << bb.getName() << "\n";
     for (int i = 0; i <= getMaxCycle(bb); i++) {
-      outs() << "   Cycle " << i << "\n";
+      scheduleFile << "  Cycle " << i << "\n";
       for (auto it : schedule) {
         if ((it.second == i) && (it.first->getParent() == &bb))
-          outs() << "      " << *(it.first) << "\n";
+          scheduleFile << "      " << *(it.first) << "\n";
       }
+      scheduleFile << "\n";
     }
+    scheduleFile << "\n";
   }
 }
 
-void Scheduler625::validateSchedule(Function &F) {
-  outs() << "\nValidating Schedule for Function " << F.getName() << "\n";
+void Scheduler625::validateScheduleAndReportTiming(Function &F,
+                                                   raw_fd_ostream &timingRpt) {
+  if (!QuietFlag)
+    outs() << "\nValidating Schedule for Function " << F.getName() << "\n";
   for (auto &bb : F) {
-    validateSchedule(bb);
+    validateScheduleAndReportTiming(bb, timingRpt);
   }
 }
 
-void Scheduler625::validateSchedule(BasicBlock &bb) {
-  outs() << "  BB \"" << bb.getName().str() << "\" of function \""
-         << bb.getParent()->getName().str() << "\"...\n";
+void Scheduler625::validateScheduleAndReportTiming(BasicBlock &bb,
+                                                   raw_fd_ostream &timingRpt) {
+  if (!QuietFlag)
+    outs() << "  BB \"" << bb.getName().str() << "\" of function \""
+           << bb.getParent()->getName().str() << "\"...\n";
 
   // Check that all instructions have been assigned to a state
-  outs()
-      << "    Checking that all instructions have been assigned to a state\n";
+  if (!QuietFlag)
+    outs()
+        << "    Checking that all instructions have been assigned to a state\n";
   for (auto &I : bb) {
     bool needsScheduling = SchedHelper::needsScheduling(I);
     bool scheduled = schedule.find(&I) != schedule.end();
@@ -87,7 +116,8 @@ void Scheduler625::validateSchedule(BasicBlock &bb) {
     }
   }
 
-  outs() << "    Checking data dependencies\n";
+  if (!QuietFlag)
+    outs() << "    Checking data dependencies\n";
   // Check data dependencies
   for (auto &I : bb) {
     if (!SchedHelper::needsScheduling(I))
@@ -123,7 +153,8 @@ void Scheduler625::validateSchedule(BasicBlock &bb) {
   }
 
   // Check usage of functional units
-  outs() << "    Checking number of functional units used\n";
+  if (!QuietFlag)
+    outs() << "    Checking number of functional units used\n";
   // Build fuUsage, which is a mapping of functional unit to second map, which
   // maps the stateNum (int) it is used in, to the list of Instructions that use
   // the FU in that stateNum.
@@ -171,11 +202,9 @@ void Scheduler625::validateSchedule(BasicBlock &bb) {
     }
   }
 
-  if (clockPeriodConstraint == 0)
-    return;
-
   // Check critical paths
-  outs() << "    Checking critical path\n";
+  if (!QuietFlag)
+    outs() << "    Checking critical path\n";
   std::map<unsigned, std::vector<Instruction *>> insnsByStateNum;
   for (auto &I : bb) {
     if (!SchedHelper::needsScheduling(I))
@@ -184,118 +213,135 @@ void Scheduler625::validateSchedule(BasicBlock &bb) {
     insnsByStateNum[stateNum].push_back(&I);
   }
 
+  std::map<Instruction *, double> delays;
+
   for (auto insnsForState : insnsByStateNum) {
     // Find longest delay in instructions for this state,
     // which is guaranteed to be a topologically sorted DAG
-    std::map<Instruction *, double> delays;
 
-    // Initialize all nodes to 0
-    for (auto I : insnsForState.second) {
-      delays[I] = 0;
-    }
+    // Initialize all nodes to their delay
+    for (auto I : insnsForState.second)
+      delays[I] = SchedHelper::getInsnDelay(*I);
 
     // Propagate delays
     for (auto I : insnsForState.second) {
       for (auto use = I->user_begin(), use_end = I->user_end(); use != use_end;
            use++) {
         if (Instruction *Iuse = dyn_cast<Instruction>(*use)) {
+          if (!SchedHelper::needsScheduling(*Iuse))
+            continue;
+          if (schedule.at(Iuse) != schedule.at(I))
+            continue;
           if (delays.find(Iuse) == delays.end())
             continue;
-          delays[Iuse] =
-              std::max(delays[Iuse], delays[I] + SchedHelper::getInsnDelay(*I));
+          delays[Iuse] = std::max(delays[Iuse],
+                                  delays[I] + SchedHelper::getInsnDelay(*Iuse));
         }
       }
     }
+  }
 
-    // Find max delay
-    auto maxDelayIt =
-        std::max_element(delays.begin(), delays.end(),
-                         [](const std::pair<Instruction *, double> a,
-                            const std::pair<Instruction *, double> b) {
-                           return a.second < b.second;
-                         });
+  // Find max delay
+  auto maxDelayIt =
+      std::max_element(delays.begin(), delays.end(),
+                       [](const std::pair<Instruction *, double> a,
+                          const std::pair<Instruction *, double> b) {
+                         return a.second < b.second;
+                       });
 
-    // Find path
-    std::list<Instruction *> path;
-    Instruction *I = (*maxDelayIt).first;
+  // Find path
+  std::list<Instruction *> path;
+  Instruction *I = (*maxDelayIt).first;
 
-    // outs() << (*maxDelayIt).first << "\n";
-    // outs() << (*maxDelayIt).second << "\n";
+  while (1) {
+    path.push_front(I);
 
-    while (1) {
-      // outs() << "I:" << *I << "\n";
-      path.push_front(I);
-
-      // Check if there are dependencies
-      bool found = false;
-      bool depsInThisCycleExist = false;
-      for (auto dep = I->op_begin(), dep_end = I->op_end(); dep != dep_end;
-           dep++) {
-        // outs() << "  dep: " << **dep << "\n";
-        Instruction *Idep = dyn_cast<Instruction>(*dep);
-        if (!Idep)
-          continue;
-        if (delays.find(Idep) == delays.end())
-          continue;
-        depsInThisCycleExist = true;
-        if ((delays[Idep] + SchedHelper::getInsnDelay(*Idep)) == delays[I]) {
-          I = Idep;
-          found = true;
-          break;
-        }
-      }
-      if (!depsInThisCycleExist)
+    // Check if there are dependencies
+    bool found = false;
+    bool depsInThisCycleExist = false;
+    for (auto dep = I->op_begin(), dep_end = I->op_end(); dep != dep_end;
+         dep++) {
+      Instruction *Idep = dyn_cast<Instruction>(*dep);
+      if (!Idep or !SchedHelper::needsScheduling(*Idep))
+        continue;
+      if (schedule.at(Idep) != schedule.at(I))
+        continue;
+      if (delays.find(Idep) == delays.end())
+        continue;
+      depsInThisCycleExist = true;
+      if ((delays[Idep] + SchedHelper::getInsnDelay(*I)) == delays[I]) {
+        I = Idep;
+        found = true;
         break;
-      assert(found);
-    }
-
-    if ((*maxDelayIt).second > clockPeriodConstraint) {
-      errs() << "Timing violation in function " << bb.getParent()->getName()
-             << " basic block " << bb.getName()
-             << ".  Longest chained delay path is " << (*maxDelayIt).second
-             << " ns, which violates the clock period of "
-             << clockPeriodConstraint << " ns. "
-             << "The violating path contains the following instructions:\n";
-      // errs() << path.size() << "\n";
-      for (auto I : path) {
-        errs() << "  " << *I << " (delay " << SchedHelper::getInsnDelay(*I)
-               << "ns)\n";
       }
-      report_fatal_error("Invalid schedule");
     }
+    if (!depsInThisCycleExist)
+      break;
+    assert(found);
+  }
+
+  // Write longest path to file
+  timingRpt << "Basic block " << bb.getName().str() << "\n";
+  timingRpt << "  Longest path: " << (*maxDelayIt).second << " ns\n";
+  for (auto I : path) {
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    ss << *I;
+    timingRpt << "    (" << SchedHelper::getInsnDelay(*I) << "ns)  " << str
+              << " \n";
+  }
+
+  if (((*maxDelayIt).second > clockPeriodConstraint) &&
+      (clockPeriodConstraint != 0)) {
+    errs() << "Timing violation in function " << bb.getParent()->getName()
+           << " basic block " << bb.getName()
+           << ".  Longest chained delay path is " << (*maxDelayIt).second
+           << " ns, which violates the clock period of "
+           << clockPeriodConstraint << " ns. "
+           << "The violating path contains the following instructions:\n";
+    for (auto I : path) {
+      errs() << "  " << *I << " (delay " << SchedHelper::getInsnDelay(*I)
+             << "ns)\n";
+    }
+    report_fatal_error("Invalid schedule");
   }
 }
 
-void Scheduler625::outputScheduleGantt(Function &F) {
+void Scheduler625::outputScheduleGantt(Function &F, raw_fd_ostream &ganttFile) {
   std::string funcName = F.getName();
-  // StringRef fileName =
-  StringRef fileName = funcName + ".tex";
 
-  outs() << "\n  Creating " << fileName << "\n";
+  int numRows = 0;
+  for (auto &bb : F) {
+    numRows++;
+    for (auto &I : bb) {
+      if (!SchedHelper::needsScheduling(I))
+        continue;
+      numRows++;
+    }
+  }
+  int paperHeight = 2.0 + numRows / 2.2;
 
-  std::error_code EC;
-  raw_fd_ostream myfile(fileName, EC);
-
-  // myfile.open();
-  myfile << "\\documentclass[12pt]{article}\n";
-  myfile << "\\usepackage{lscape}\n";
-  myfile << "\\usepackage[margin=0.5in,paperwidth=10in,paperheight=30in]{"
-            "geometry}\n";
-  myfile << "\\usepackage{pgfgantt}\n";
-  myfile << "\\begin{document}\n";
-  // myfile << "\\begin{landscape}\n";
-  myfile << "\\section*{Schedule of "
-         << std::regex_replace(funcName, std::regex("_"), "\\_") << "}\n";
+  ganttFile << "\\documentclass[12pt]{article}\n";
+  ganttFile << "\\usepackage{lscape}\n";
+  ganttFile << "\\usepackage[margin=0.5in,paperwidth=12in,paperheight="
+            << paperHeight
+            << "in]{"
+               "geometry}\n";
+  ganttFile << "\\usepackage{pgfgantt}\n";
+  ganttFile << "\\begin{document}\n";
+  ganttFile << "\\section*{Schedule of "
+            << std::regex_replace(funcName, std::regex("_"), "\\_") << "}\n";
 
   // Find max cycleNum
   int cycleNumEnd = 0;
   for (auto &bb : F) {
     cycleNumEnd = std::max(cycleNumEnd, globalBBStart[&bb] + getMaxCycle(bb));
   }
-  myfile << "\\begin{ganttchart}["
-         << "bar top shift = 0.1, bar height = 0.8"
-         << "]{0}{" << cycleNumEnd << "}\n";
-  myfile << "\\gantttitlelist{1,...," << cycleNumEnd + 1 << "}{1} \\\\ \n";
+  ganttFile << "\\begin{ganttchart}["
+            << "bar top shift = 0.1, bar height = 0.8,bar/.append "
+               "style={fill=blue!50},hgrid,vgrid"
+            << "]{0}{" << cycleNumEnd << "}\n";
+  ganttFile << "\\gantttitlelist{1,...," << cycleNumEnd + 1 << "}{1} \\\\ \n";
 
   int elem = 0;
   std::map<Value *, int> elemMap;
@@ -303,9 +349,9 @@ void Scheduler625::outputScheduleGantt(Function &F) {
     elemMap[&bb] = elem;
     elem++;
 
-    myfile << "\\ganttgroup{" << bb.getName().str() << "} {"
-           << globalBBStart[&bb] << "} {"
-           << globalBBStart[&bb] + getMaxCycle(bb) << "} \\\\ \n";
+    ganttFile << "\\ganttgroup{" << bb.getName().str() << "} {"
+              << globalBBStart[&bb] << "} {"
+              << globalBBStart[&bb] + getMaxCycle(bb) << "} \\\\ \n";
 
     // Print each instruction in the basic block
     for (auto &I : bb) {
@@ -317,38 +363,34 @@ void Scheduler625::outputScheduleGantt(Function &F) {
       str = std::regex_replace(str, std::regex("%"), "\\%");
       str = std::regex_replace(str, std::regex("_"), "\\_");
 
-      const int Ilength = 50;
+      const int Ilength = 60;
       if (str.length() > Ilength)
         str = str.substr(0, Ilength - 3) + "...";
 
-      myfile << "\\ganttbar{" << str << "}{" << globalSchedule[&I] << "}{"
-             << globalSchedule[&I] +
-                    std::max(SchedHelper::getInsnLatency(I) - 1, 0)
-             << "} \\\\ \n";
+      ganttFile << "\\ganttbar{" << str << "}{" << globalSchedule[&I] << "}{"
+                << globalSchedule[&I] +
+                       std::max(SchedHelper::getInsnLatency(I) - 1, 0)
+                << "} \\\\ \n";
 
       // Add links
       elemMap[&I] = elem;
       for (auto dep : fHLS->getDeps(I)) {
-        myfile << "\\ganttlink{elem" << elemMap[dep] << "}{elem" << elem
-               << "}\n";
+        ganttFile << "\\ganttlink{elem" << elemMap[dep] << "}{elem" << elem
+                  << "}\n";
       }
       elem++;
     }
   }
 
-  // Add basic block links
   for (auto &bb : F) {
     for (auto successor : successors(&bb)) {
-      // myfile << "\\ganttlink{elem" << elemMap[&bb] << "}{elem"
+      // ganttFile << "\\ganttlink{elem" << elemMap[&bb] << "}{elem"
       //        << elemMap[successor] << "}\n";
     }
   }
 
-  myfile << "\\end{ganttchart}\n";
-  // myfile << "\\end{landscape}\n";
-  myfile << "\\end{document}\n";
-
-  myfile.close();
+  ganttFile << "\\end{ganttchart}\n";
+  ganttFile << "\\end{document}\n";
 }
 
 void Scheduler625::scheduleGlobal(Function &F) {
