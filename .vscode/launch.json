@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "(gdb) Scheduler-simple",
             "type": "cppdbg",
@@ -13,10 +14,33 @@
                 "-load",
                 "${workspaceFolder}/lab_scheduling/build/scheduler_625.so",
                 "-sched625",
-                "simple.clang.bc"
+                "simple.clang.bc",
             ],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/lab_scheduling/benchmarks/simple/",
+            "cwd": "${workspaceFolder}/benchmarks/simple/",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },  {
+            "name": "(gdb) ATB",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/usr/bin/opt-9",
+            "args": [
+                "-load",
+                "${workspaceFolder}/lab_llvm/build/ATB_625.so",
+                "-ATB_625",
+                "simple.clang.bc",
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/benchmarks/simple_unrolled_partitioned/",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
