@@ -8,11 +8,12 @@
 
 
 # Extract Vivado HLS include path
-VHLS_PATH := $(dir $(shell which vivado_hls))/..
+VHLS_PATH := $(dir $(shell which vitis_hls))/..
 VHLS_INC ?= ${VHLS_PATH}/include
+K ?= 3
 
 # Specify compilation flags
-CFLAGS = -g -I${VHLS_INC} -DK_CONST=3
+CFLAGS = -g -I${VHLS_INC} -DK_CONST=$(K)
 
 # Compile & run digitrec implementation
 all: digitrec.cpp digitrec_test.cpp

@@ -23,3 +23,4 @@ build
 # 
 /lab_graphs/niGraphs
 /lab_graphs/dot
+/lab_vitis_hls/proj/*
