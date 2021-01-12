@@ -13,8 +13,6 @@ set(CMAKE_BUILD_TYPE Debug)
 add_executable (main 
     main.cpp
     utils.cpp
-    
-    solutions.cpp
     )
 
 target_link_libraries(main niGraph niGraphReader)
