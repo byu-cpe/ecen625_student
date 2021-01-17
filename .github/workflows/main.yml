@@ -6,7 +6,7 @@ name: Submission Timestamp
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    tags: [ asst1_submission, asst2_submission, asst3_submission, asst4_submission, asst5_submission, asst6_submission ]
+    tags: [ lab1_submission, lab2_submission, lab3_submission, lab4_submission, lab5_submission, lab6_submission ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
