@@ -1,3 +1,5 @@
+
+
 # Latex files
 *.aux
 *.bbl
@@ -20,7 +22,11 @@
 # Build files
 build
 
-# 
+# Vivado
+*.log
+*.jou
+*.str
+
 /lab_graphs/niGraphs
 /lab_graphs/dot
-/lab_vitis_hls/proj/*
+/lab_vitis_hls/*.prj
