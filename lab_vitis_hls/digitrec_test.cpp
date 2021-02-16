@@ -9,67 +9,54 @@
 #include <string>
 
 #include "digitrec.h"
+#include "test_data.h"
 
 int main() {
   // Output file that saves the test bench results
   std::ofstream outfile;
   outfile.open("out.dat");
 
-  // Read input file for the testing set
-  std::string line;
-  std::ifstream myfile("data/testing_set.dat");
+  int num_test_insts = 0;
+  int error = 0;
 
-  if (myfile.is_open()) {
-    int error = 0;
-    int num_test_insts = 0;
+  for (auto data : test_data) {
+    digit input_digit = data.first;
+    uint8_t golden = data.second;
 
-    while (std::getline(myfile, line)) {
-      // Read handwritten digit input and expected digit
-      digit input_digit =
-          strtoul(line.substr(0, line.find(",")).c_str(), NULL, 16);
-      int input_value = strtoul(
-          line.substr(line.find(",") + 1, line.length()).c_str(), NULL, 10);
+    // Call design under test (DUT)
+    bit4 interpreted_digit = digitrec(input_digit);
 
-      // Call design under test (DUT)
-      bit4 interpreted_digit = digitrec(input_digit);
+    // Print result messages to console
+    num_test_insts++;
+    std::cout << "#" << std::dec << num_test_insts;
+    std::cout << ": \tTestInstance=" << std::hex << input_digit;
+    std::cout << " \tInterpreted=" << std::dec << interpreted_digit
+              << " \tExpected=" << unsigned(golden);
+    // Print result messages to file
+    outfile << "#" << std::dec << num_test_insts;
+    outfile << ": \tTestInstance=" << std::hex << input_digit;
+    outfile << " \tInterpreted=" << std::dec << interpreted_digit
+            << " \tExpected=" << unsigned(golden);
 
-      // Print result messages to console
-      num_test_insts++;
-      std::cout << "#" << std::dec << num_test_insts;
-      std::cout << ": \tTestInstance=" << std::hex << input_digit;
-      std::cout << " \tInterpreted=" << interpreted_digit
-                << " \tExpected=" << input_value;
-      // Print result messages to file
-      outfile << "#" << std::dec << num_test_insts;
-      outfile << ": \tTestInstance=" << std::hex << input_digit;
-      outfile << " \tInterpreted=" << interpreted_digit
-              << " \tExpected=" << input_value;
-
-      // Check for any difference between k-NN interpreted digit vs. expected
-      // digit
-      if (interpreted_digit != input_value) {
-        error++;
-        std::cout << " \t[Mismatch!]";
-        outfile << " \t[Mismatch!]";
-      }
-
-      std::cout << std::endl;
-      outfile << std::endl;
+    // Check for any difference between k-NN interpreted digit vs. expected
+    // digit
+    if (interpreted_digit != golden) {
+      error++;
+      std::cout << " \t[Mismatch!]";
+      outfile << " \t[Mismatch!]";
     }
 
-    // Report overall error out of all testing instances
-    std::cout << "Overall Accuracy = " << std::setprecision(3)
-              << ((double)(num_test_insts - error) / num_test_insts) * 100
-              << "%" << std::endl;
-    outfile << "Overall Accuracy = " << std::setprecision(3)
+    std::cout << std::endl;
+    outfile << std::endl;
+  }
+
+  // Report overall error out of all testing instances
+  std::cout << "Overall Accuracy = " << std::setprecision(3)
             << ((double)(num_test_insts - error) / num_test_insts) * 100 << "%"
             << std::endl;
-
-    // Close input file for the testing set
-    myfile.close();
-
-  } else
-    std::cout << "Unable to open file for the testing set!" << std::endl;
+  outfile << "Overall Accuracy = " << std::setprecision(3)
+          << ((double)(num_test_insts - error) / num_test_insts) * 100 << "%"
+          << std::endl;
 
   // Close output file
   outfile.close();
