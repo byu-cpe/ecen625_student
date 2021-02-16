@@ -32,7 +32,6 @@ set_top digitrec
 # Add design and testbench files
 add_files digitrec.cpp -cflags $CFLAGS
 add_files -tb digitrec_test.cpp -cflags $CFLAGS
-add_files -tb data
 
 open_solution "solution1"
 # Use Zynq device
