@@ -33,7 +33,7 @@ set file_data [read $fp]
 close $fp
 set data [split $file_data "\n"]
 foreach line $data {
-  if { [string match "*Overall Error*" $line] } {
+  if { [string match "*Overall Accuracy*" $line] } {
     set info [lindex [split $line "="] 1]
     puts -nonewline $fileId "${info} "
     break
