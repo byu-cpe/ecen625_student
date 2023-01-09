@@ -18,35 +18,30 @@ NIGraph::NIGraph(std::string ID) : ID(ID) {
   // TODO Auto-generated constructor stub
 }
 
-NIGraph::~NIGraph() {
-  for (auto node : nodes) {
-    delete node;
-  }
-  for (auto edge : edges) {
-    delete edge;
-  }
-}
+NIGraph::~NIGraph() {}
 
-void NIGraph::addNode(NIGraphNode *node) {
+void NIGraph::addNode(std::unique_ptr<NIGraphNode> node) {
 
   string id = node->getId();
   assert(idMapNode.find(id) == idMapNode.end());
 
-  idMapNode[id] = node;
+  idMapNode[id] = node.get();
 
   nodes.push_back(move(node));
+  nodesReadOnly.push_back(node.get());
 }
 
-void NIGraph::addEdge(NIGraphEdge *edge) {
+void NIGraph::addEdge(std::unique_ptr<NIGraphEdge> edge) {
   string id = edge->getId();
   assert(idMapEdge.find(id) == idMapEdge.end());
 
-  idMapEdge[id] = edge;
+  idMapEdge[id] = edge.get();
 
-  edge->getSourceNode()->addOutEdge(edge);
-  edge->getDestNode()->addInEdge(edge);
+  edge->getSourceNode()->addOutEdge(edge.get());
+  edge->getDestNode()->addInEdge(edge.get());
 
   edges.push_back(move(edge));
+  edgesReadOnly.push_back(edge.get());
 }
 
 std::string NIGraph::stats() {
@@ -54,14 +49,16 @@ std::string NIGraph::stats() {
 
   s << "Number of nodes: " << getNumNodes() << endl;
 
-  int numOutEdges = 0;
-  int numInEdges = 0;
+  size_t numOutEdges = 0;
+  size_t numInEdges = 0;
   for (auto &node : nodes) {
     numOutEdges += node->getOutEdges().size();
     numInEdges += node->getInEdges().size();
   }
-  s << "Avg num out edges: " << (numOutEdges / (float)getNumNodes()) << endl;
-  s << "Avg num in edges: " << (numInEdges / (float)getNumNodes()) << endl;
+  s << "Avg num out edges: " << ((double)numOutEdges / (double)getNumNodes())
+    << endl;
+  s << "Avg num in edges: " << ((double)numInEdges / (double)getNumNodes())
+    << endl;
 
   return s.str();
 }

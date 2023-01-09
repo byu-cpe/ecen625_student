@@ -8,6 +8,7 @@
 #ifndef SRC_GRAPHREADER_GRAPHREADER_H_
 #define SRC_GRAPHREADER_GRAPHREADER_H_
 
+#include <filesystem>
 #include <memory>
 #include <string>
 
@@ -25,7 +26,8 @@ public:
   NIGraphReader();
   virtual ~NIGraphReader();
 
-  NIGraph *parseGraphMlFile(std::string ID, std::string filePath);
+  std::unique_ptr<NIGraph> parseGraphMlFile(std::string ID,
+                                            std::filesystem::path filePath);
 };
 
 #endif /* SRC_GRAPHREADER_GRAPHREADER_H_ */

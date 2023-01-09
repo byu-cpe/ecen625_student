@@ -22,10 +22,12 @@ class NIGraph {
 private:
   std::string ID;
 
-  std::vector<NIGraphNode *> nodes;
+  std::vector<std::unique_ptr<NIGraphNode>> nodes;
+  std::vector<NIGraphNode *> nodesReadOnly;
   std::map<std::string, NIGraphNode *> idMapNode;
 
-  std::vector<NIGraphEdge *> edges;
+  std::vector<std::unique_ptr<NIGraphEdge>> edges;
+  std::vector<NIGraphEdge *> edgesReadOnly;
   std::map<std::string, NIGraphEdge *> idMapEdge;
 
 public:
@@ -34,8 +36,8 @@ public:
 
   bool nodeListIsTopological(NIGraphNodeList &list);
 
-  void addNode(NIGraphNode *);
-  void addEdge(NIGraphEdge *);
+  void addNode(std::unique_ptr<NIGraphNode> node);
+  void addEdge(std::unique_ptr<NIGraphEdge> edge);
 
   std::string stats();
 
@@ -43,8 +45,8 @@ public:
   int getNumNodes() { return nodes.size(); }
   NIGraphNode *findNodeById(std::string id);
 
-  std::vector<NIGraphEdge *> const &getEdges() const { return edges; }
-  std::vector<NIGraphNode *> const &getNodes() const { return nodes; }
+  std::vector<NIGraphEdge *> const &getEdges() const { return edgesReadOnly; }
+  std::vector<NIGraphNode *> const &getNodes() const { return nodesReadOnly; }
 };
 
 #endif /* SRC_GRAPH_GRAPH_H_ */

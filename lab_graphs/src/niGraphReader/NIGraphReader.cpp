@@ -20,9 +20,9 @@ NIGraphReader::~NIGraphReader() {
 }
 
 void NIGraphReader::parseNode(rapidxml::xml_node<> &node, NIGraph &graph) {
-  NIGraphNode *graphNode = new NIGraphNode();
+  std::unique_ptr<NIGraphNode> graphNode = std::make_unique<NIGraphNode>();
 
-  rapidxml::xml_attribute<> *attr;
+  rapidxml::xml_attribute<> *attr = nullptr;
   attr = node.first_attribute("id");
 
   string id = attr->value();
@@ -73,21 +73,19 @@ void NIGraphReader::parseNode(rapidxml::xml_node<> &node, NIGraph &graph) {
     n = n->next_sibling();
   }
 
-  graph.addNode(graphNode);
+  graph.addNode(move(graphNode));
 }
 
 void NIGraphReader::parseEdge(rapidxml::xml_node<> &node, NIGraph &graph) {
-  NIGraphEdge *graphEdge = new NIGraphEdge();
+  std::unique_ptr<NIGraphEdge> graphEdge = std::make_unique<NIGraphEdge>();
 
   string id = node.first_attribute("id")->value();
   graphEdge->setId(id);
 
-  NIGraphNode *sourceNode =
-      graph.findNodeById(node.first_attribute("source")->value());
+  auto sourceNode = graph.findNodeById(node.first_attribute("source")->value());
   graphEdge->setSourceNode(sourceNode);
 
-  NIGraphNode *destNode =
-      graph.findNodeById(node.first_attribute("target")->value());
+  auto destNode = graph.findNodeById(node.first_attribute("target")->value());
   graphEdge->setDestNode(destNode);
 
   rapidxml::xml_node<> *childNode = node.first_node();
@@ -105,17 +103,15 @@ void NIGraphReader::parseEdge(rapidxml::xml_node<> &node, NIGraph &graph) {
     childNode = childNode->next_sibling();
   }
 
-  graph.addEdge(graphEdge);
-  //	<edge id="e21" source="n31" target="n32">
-  //	      <data key="Delay">809</data>
-  //	      <data key="IsFeedback">False</data>
-  //	    </edge>
+  graph.addEdge(move(graphEdge));
 }
 
-NIGraph *NIGraphReader::parseGraphMlFile(std::string ID, std::string filePath) {
-  assert(fileExists(filePath));
+std::unique_ptr<NIGraph>
+NIGraphReader::parseGraphMlFile(std::string ID,
+                                std::filesystem::path filePath) {
+  assert(std::filesystem::exists(filePath));
 
-  NIGraph *graph = new NIGraph(ID);
+  std::unique_ptr<NIGraph> graph = std::make_unique<NIGraph>(ID);
 
   std::ifstream fin(filePath);
 

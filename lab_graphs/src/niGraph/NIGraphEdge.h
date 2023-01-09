@@ -14,32 +14,32 @@ class NIGraphNode;
 
 class NIGraphEdge {
 private:
-	std::string id;
+  std::string id;
 
-	NIGraphNode * sourceNode;
-	NIGraphNode * destNode;
+  NIGraphNode *sourceNode;
+  NIGraphNode *destNode;
 
-	int delay;
-	bool isFeedback;
+  int delay;
+  bool isFeedback;
 
 public:
-	NIGraphEdge();
-	virtual ~NIGraphEdge();
+  NIGraphEdge();
+  virtual ~NIGraphEdge();
 
-	void setId(std::string idStr) { id = idStr; }
-	std::string getId() { return id; }
+  void setId(std::string idStr) { id = idStr; }
+  std::string getId() { return id; }
 
-	void setSourceNode(NIGraphNode * node) { sourceNode = node; }
-	NIGraphNode * getSourceNode() { return sourceNode; }
+  void setSourceNode(NIGraphNode *node) { sourceNode = node; }
+  NIGraphNode *getSourceNode() { return sourceNode; }
 
-	void setDestNode(NIGraphNode * node) { destNode = node; }
-	NIGraphNode * getDestNode() { return destNode; }
+  void setDestNode(NIGraphNode *node) { destNode = node; }
+  NIGraphNode *getDestNode() { return destNode; }
 
-	void setDelay( int delayVal) { delay = delayVal; }
-	int getDelay() { return delay; }
+  void setDelay(int delayVal) { delay = delayVal; }
+  int getDelay() { return delay; }
 
-	void setIsFeedback(bool feedback) {isFeedback = feedback; }
-	bool getIsFeedback() { return isFeedback; }
+  void setIsFeedback(bool feedback) { isFeedback = feedback; }
+  bool getIsFeedback() { return isFeedback; }
 };
 
 #endif /* SRC_GRAPH_GRAPHEDGE_H_ */

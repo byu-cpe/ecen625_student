@@ -7,12 +7,7 @@
 
 #include "NIGraphEdge.h"
 
-NIGraphEdge::NIGraphEdge() {
-	// TODO Auto-generated constructor stub
+NIGraphEdge::NIGraphEdge()
+    : sourceNode(nullptr), destNode(nullptr), delay(0), isFeedback(false) {}
 
-}
-
-NIGraphEdge::~NIGraphEdge() {
-	// TODO Auto-generated destructor stub
-}
-
+NIGraphEdge::~NIGraphEdge() {}
