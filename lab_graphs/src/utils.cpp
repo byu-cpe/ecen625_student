@@ -24,29 +24,19 @@ bool boolStrToBool(std::string boolStr) {
   }
 }
 
-// From
-// http://stackoverflow.com/questions/8401777/simple-glob-in-c-on-unix-system
-std::vector<std::string> glob(const std::string &pat) {
-  glob_t glob_result;
-  glob(pat.c_str(), GLOB_TILDE, NULL, &glob_result);
-  std::vector<std::string> ret;
-  for (unsigned int i = 0; i < glob_result.gl_pathc; ++i) {
-    ret.push_back(std::string(glob_result.gl_pathv[i]));
-  }
-  globfree(&glob_result);
-  return ret;
-}
-
 timestamp_t get_timestamp() {
-  struct timeval now;
+  struct timeval now = {0};
   gettimeofday(&now, NULL);
-  return now.tv_usec + (timestamp_t)now.tv_sec * 1000000;
+
+  const int usPerS = 1000000;
+  return now.tv_usec + (timestamp_t)now.tv_sec * usPerS;
 }
 
 // From
 // https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-the-output-of-the-command-within-c-using-po
 std::string exec(const char *cmd) {
-  std::array<char, 128> buffer;
+  const int bufSize = 128;
+  std::array<char, bufSize> buffer = {0};
   std::string result;
   std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
   if (!pipe) {

@@ -14,13 +14,6 @@ timestamp_t get_timestamp();
 
 bool boolStrToBool(std::string boolStr);
 
-inline bool fileExists(const std::string &name) {
-  std::ifstream f(name.c_str());
-  return f.good();
-}
-
-std::vector<std::string> glob(const std::string &pat);
-
 std::string exec(const char *cmd);
 
 inline std::string exec(std::string cmd) { return exec(cmd.c_str()); }
