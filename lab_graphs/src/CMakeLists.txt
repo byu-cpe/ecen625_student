@@ -15,6 +15,7 @@ add_subdirectory (niGraphReader)
 add_executable (main 
     main.cpp
     utils.cpp
+    solutions.cpp
 )
 
 target_link_libraries(main niGraph niGraphReader)
