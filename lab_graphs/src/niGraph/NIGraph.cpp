@@ -21,14 +21,13 @@ NIGraph::NIGraph(std::string ID) : ID(ID) {
 NIGraph::~NIGraph() {}
 
 void NIGraph::addNode(std::unique_ptr<NIGraphNode> node) {
-
   string id = node->getId();
   assert(idMapNode.find(id) == idMapNode.end());
 
   idMapNode[id] = node.get();
 
-  nodes.push_back(move(node));
   nodesReadOnly.push_back(node.get());
+  nodes.push_back(move(node));
 }
 
 void NIGraph::addEdge(std::unique_ptr<NIGraphEdge> edge) {
@@ -40,8 +39,8 @@ void NIGraph::addEdge(std::unique_ptr<NIGraphEdge> edge) {
   edge->getSourceNode()->addOutEdge(edge.get());
   edge->getDestNode()->addInEdge(edge.get());
 
-  edges.push_back(move(edge));
   edgesReadOnly.push_back(edge.get());
+  edges.push_back(move(edge));
 }
 
 std::string NIGraph::stats() {
