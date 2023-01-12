@@ -8,12 +8,14 @@ char AdderTreeBalancer::ID = 0;
 
 static RegisterPass<AdderTreeBalancer> X("ATB_625", "Adder Tree Balancer Pass");
 
-bool AdderTreeBalancer::runOnBasicBlock(BasicBlock &BB) {
+bool AdderTreeBalancer::runOnFunction(Function &f) {
   // ADD CODE HERE
   // Add private helper functions if needed
 
-  outs() << "Hi! I'm BasicBlock " << BB.getName() << " in function "
-         << BB.getParent()->getName() << "\n";
+  for (auto &bb : f) {
+    outs() << "Hi! I'm BasicBlock " << bb.getName() << " in function "
+           << f.getName() << "\n";
+  }
 
   // return whether code has been modified
   return true;

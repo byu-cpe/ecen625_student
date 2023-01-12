@@ -97,11 +97,11 @@ FunctionalUnit *FunctionHLS::findOrAllocateRAM(Value &v) {
   }
 
   else if (AllocaInst *AI = dyn_cast<AllocaInst>(&v)) {
-    fu = new FunctionalUnit(AI->getName(), FUNCTIONAL_UNIT_NUM_MEM_PORTS);
+    fu = new FunctionalUnit(AI->getName().str(), FUNCTIONAL_UNIT_NUM_MEM_PORTS);
   }
 
   if (GlobalVariable *GV = dyn_cast<GlobalVariable>(&v)) {
-    fu = new FunctionalUnit(GV->getName(), FUNCTIONAL_UNIT_NUM_MEM_PORTS);
+    fu = new FunctionalUnit(GV->getName().str(), FUNCTIONAL_UNIT_NUM_MEM_PORTS);
   }
 
   if (fu) {

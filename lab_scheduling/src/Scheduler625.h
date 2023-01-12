@@ -1,6 +1,8 @@
+#include <map>
+
+#include <llvm/IR/BasicBlock.h>
 #include <llvm/Pass.h>
 #include <llvm/Support/raw_ostream.h>
-#include <map>
 
 namespace llvm {
 
@@ -13,7 +15,7 @@ public:
   static char ID;
   Scheduler625() : FunctionPass(ID) {}
 
-  bool runOnFunction(Function &F);
+  bool runOnFunction(Function &F) override;
 
 private:
   std::map<Instruction *, int> schedule;

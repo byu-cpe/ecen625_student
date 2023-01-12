@@ -1,24 +1,24 @@
-#ifndef LAB_LLVM_SRC_ADDERTREEBALANCER
-#define LAB_LLVM_SRC_ADDERTREEBALANCER
+#ifndef ADDERTREEBALANCER_H
+#define ADDERTREEBALANCER_H
 
-#include "llvm/IR/BasicBlock.h"
-#include "llvm/IR/InstrTypes.h"
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/InstrTypes.h>
 #include <llvm/Pass.h>
 
 #include <deque>
 
 namespace llvm {
 
-class AdderTreeBalancer : public BasicBlockPass {
+class AdderTreeBalancer : public FunctionPass {
 public:
   static char ID;
 
-  AdderTreeBalancer() : BasicBlockPass(ID) {}
+  AdderTreeBalancer() : FunctionPass(ID) {}
   ~AdderTreeBalancer() {}
 
 private:
 public:
-  bool runOnBasicBlock(BasicBlock &BB);
+  bool runOnFunction(Function &F) override;
 };
 } // namespace llvm
-#endif /* LAB_LLVM_SRC_ADDERTREEBALANCER */
+#endif /* ADDERTREEBALANCER_H */

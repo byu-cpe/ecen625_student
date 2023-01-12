@@ -2,6 +2,11 @@ ATB_BUILD_DIR = $(abspath $(PWD)/$(LEVEL)/../lab_llvm/build)
 LAB_LLVM_RESOURCES_DIR = $(abspath $(PWD)/$(LEVEL)/../lab_llvm/resources)
 SCHED_BUILD_DIR = $(abspath $(PWD)/$(LEVEL)/../lab_scheduling/build)
 
+CLANG=clang-12
+OPT=opt-12
+LLI=lli-12
+LLVM-DIS=llvm-dis-12
+
 ifeq ($(ASAP), 1)
 ILP_FLAG = 
 else
@@ -24,15 +29,15 @@ default:
 
 # Runs the LLVM dissasembler to create human readable .ll files from binary .bc files
 %.ll: %.bc
-	llvm-dis-9 $^
+	$(LLVM-DIS) $^
 
 # Run clang to produce *.clang.bc file
 $(NAME).clang.bc: $(NAME).c
-	clang-9 -O1 -c -emit-llvm -fno-discard-value-names -fno-vectorize -fno-unroll-loops $^ -o $@
+	$(CLANG) -O1 -c -emit-llvm -fno-discard-value-names -fno-vectorize -fno-unroll-loops $^ -o $@
 
 # Run Adder Tree Balancer LLVM pass
 $(NAME).atb.bc: $(NAME).clang.ll $(ATB_BUILD_DIR)/ATB_625.so
-	opt-9 -load $(ATB_BUILD_DIR)/ATB_625.so -ATB_625 -dce $(NAME).clang.bc -o $(NAME).atb.bc
+	$(OPT) -load $(ATB_BUILD_DIR)/ATB_625.so -ATB_625 -dce $(NAME).clang.bc -o $(NAME).atb.bc
 
 
 clang: $(NAME).clang.ll
@@ -40,10 +45,10 @@ clang: $(NAME).clang.ll
 atb: $(NAME).atb.ll
 
 atb_check: $(NAME).atb.ll
-	lli-9 $^
+	$(LLI) $^
 
 atb_schedule: $(NAME).atb.ll
-	opt-9 -load $(SCHEDULER_SO) -sched625 $(ILP_FLAG) $(PERIOD_OPT) $(QUIET_SCHED) $(NAME).atb.bc -o /dev/null
+	$(OPT) -load $(SCHEDULER_SO) -sched625 $(ILP_FLAG) $(PERIOD_OPT) $(QUIET_SCHED) $(NAME).atb.bc -o /dev/null
 
 	# Convert scheduling to Gantt chart
 	for f in *.tex; do \
@@ -51,7 +56,7 @@ atb_schedule: $(NAME).atb.ll
 	done
 
 schedule: $(NAME).clang.ll
-	opt-9 -load $(SCHEDULER_SO) -sched625 $(ILP_FLAG) $(PERIOD_OPT) $(QUIET_SCHED) $(NAME).clang.bc -o /dev/null
+	$(OPT) -load $(SCHEDULER_SO) -sched625 $(ILP_FLAG) $(PERIOD_OPT) $(QUIET_SCHED) $(NAME).clang.bc -o /dev/null
 
 # Convert scheduling to Gantt chart
 	for f in *.tex; do \

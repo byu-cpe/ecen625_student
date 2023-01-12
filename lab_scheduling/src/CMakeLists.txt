@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.13)
 project(625_scheduler)
 
 set(CMAKE_BUILD_TYPE Debug)
@@ -10,7 +10,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 # set(LLVM_DIR ../build/cmake/modules/CMakeFiles)
 
-find_package ( LLVM 9.0 EXACT REQUIRED CONFIG )
+find_package ( LLVM 12.0 REQUIRED CONFIG )
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
@@ -37,7 +37,7 @@ add_llvm_library(scheduler_625 MODULE
     FunctionHLS.cpp
     PLUGIN_TOOL opt
 )
-target_link_libraries(scheduler_625 lpsolve55_pic)
+target_link_libraries(scheduler_625 PRIVATE lpsolve55_pic)
 
 
 # include_directories ( ${LLVM_INCLUDE_DIRS})

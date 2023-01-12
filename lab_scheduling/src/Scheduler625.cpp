@@ -4,11 +4,13 @@
 #include <fstream>
 #include <iostream>
 #include <list>
+#include <regex>
+
 #include <llvm/IR/CFG.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/Pass.h>
-#include <regex>
+#include <llvm/Support/CommandLine.h>
 
 #include "FunctionHLS.h"
 #include "FunctionalUnit.h"
@@ -194,12 +196,9 @@ void Scheduler625::validateScheduleAndReportTiming(BasicBlock &bb,
         }
         report_fatal_error("Invalid schedule");
       }
-
-      // Double check that initiation intervals are 1
-      for (auto fuUsageInst : fuUsageList) {
-        assert(FU->getInitiationInterval() == 1);
-      }
     }
+    // Double check that initiation intervals are 1
+    assert(FU->getInitiationInterval() == 1);
   }
 
   // Check critical paths
@@ -308,7 +307,7 @@ void Scheduler625::validateScheduleAndReportTiming(BasicBlock &bb,
 }
 
 void Scheduler625::outputScheduleGantt(Function &F, raw_fd_ostream &ganttFile) {
-  std::string funcName = F.getName();
+  std::string funcName(F.getName());
 
   int numRows = 0;
   for (auto &bb : F) {

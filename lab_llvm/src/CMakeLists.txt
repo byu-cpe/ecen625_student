@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.13)
 project(625_llvm)
 
 set(CMAKE_BUILD_TYPE Debug)
 
-find_package ( LLVM 9.0 EXACT REQUIRED CONFIG )
+find_package ( LLVM 12.0 REQUIRED CONFIG )
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
