@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
 
   // Open a file to write results out to
   std::ofstream fp;
-  fp.open("results.txt");
+  fp.open("results.csv");
   fp << "file_path,graph_size,runtime,longest_path\n";
 
   // Loop through the graphs
