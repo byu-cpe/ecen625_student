@@ -20,7 +20,7 @@ NIGraphReader::~NIGraphReader() {
 }
 
 void NIGraphReader::parseNode(rapidxml::xml_node<> &node, NIGraph &graph) {
-  std::unique_ptr<NIGraphNode> graphNode = std::make_unique<NIGraphNode>();
+  NIGraphNode *graphNode = new NIGraphNode();
 
   rapidxml::xml_attribute<> *attr = nullptr;
   attr = node.first_attribute("id");
@@ -73,11 +73,11 @@ void NIGraphReader::parseNode(rapidxml::xml_node<> &node, NIGraph &graph) {
     n = n->next_sibling();
   }
 
-  graph.addNode(move(graphNode));
+  graph.addNode(graphNode);
 }
 
 void NIGraphReader::parseEdge(rapidxml::xml_node<> &node, NIGraph &graph) {
-  std::unique_ptr<NIGraphEdge> graphEdge = std::make_unique<NIGraphEdge>();
+  NIGraphEdge *graphEdge = new NIGraphEdge();
 
   string id = node.first_attribute("id")->value();
   graphEdge->setId(id);
@@ -103,15 +103,14 @@ void NIGraphReader::parseEdge(rapidxml::xml_node<> &node, NIGraph &graph) {
     childNode = childNode->next_sibling();
   }
 
-  graph.addEdge(move(graphEdge));
+  graph.addEdge(graphEdge);
 }
 
-std::unique_ptr<NIGraph>
-NIGraphReader::parseGraphMlFile(std::string ID,
-                                std::filesystem::path filePath) {
+NIGraph *NIGraphReader::parseGraphMlFile(std::string ID,
+                                         std::filesystem::path filePath) {
   assert(std::filesystem::exists(filePath));
 
-  std::unique_ptr<NIGraph> graph = std::make_unique<NIGraph>(ID);
+  NIGraph *graph = new NIGraph(ID);
 
   std::ifstream fin(filePath);
 

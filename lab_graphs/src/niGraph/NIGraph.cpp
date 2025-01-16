@@ -18,29 +18,37 @@ NIGraph::NIGraph(std::string ID) : ID(ID) {
   // TODO Auto-generated constructor stub
 }
 
-NIGraph::~NIGraph() {}
+NIGraph::~NIGraph() {
+  for (auto &node : nodes) {
+    delete node;
+  }
 
-void NIGraph::addNode(std::unique_ptr<NIGraphNode> node) {
+  for (auto &edge : edges) {
+    delete edge;
+  }
+}
+
+void NIGraph::addNode(NIGraphNode *node) {
   string id = node->getId();
   assert(idMapNode.find(id) == idMapNode.end());
 
-  idMapNode[id] = node.get();
+  idMapNode[id] = node;
 
-  nodesReadOnly.push_back(node.get());
-  nodes.push_back(move(node));
+  nodesReadOnly.push_back(node);
+  nodes.push_back(node);
 }
 
-void NIGraph::addEdge(std::unique_ptr<NIGraphEdge> edge) {
+void NIGraph::addEdge(NIGraphEdge *edge) {
   string id = edge->getId();
   assert(idMapEdge.find(id) == idMapEdge.end());
 
-  idMapEdge[id] = edge.get();
+  idMapEdge[id] = edge;
 
-  edge->getSourceNode()->addOutEdge(edge.get());
-  edge->getDestNode()->addInEdge(edge.get());
+  edge->getSourceNode()->addOutEdge(edge);
+  edge->getDestNode()->addInEdge(edge);
 
-  edgesReadOnly.push_back(edge.get());
-  edges.push_back(move(edge));
+  edgesReadOnly.push_back(edge);
+  edges.push_back(edge);
 }
 
 std::string NIGraph::stats() {

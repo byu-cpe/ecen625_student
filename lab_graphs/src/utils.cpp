@@ -38,11 +38,11 @@ std::string exec(const char *cmd) {
   const int bufSize = 128;
   std::array<char, bufSize> buffer = {0};
   std::string result;
-  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+  FILE *pipe = popen(cmd, "r");
   if (!pipe) {
     throw std::runtime_error("popen() failed!");
   }
-  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+  while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
     result += buffer.data();
   }
   return result;

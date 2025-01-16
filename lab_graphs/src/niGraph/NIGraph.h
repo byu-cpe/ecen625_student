@@ -22,11 +22,11 @@ class NIGraph {
 private:
   std::string ID;
 
-  std::vector<std::unique_ptr<NIGraphNode>> nodes;
+  std::vector<NIGraphNode *> nodes;
   std::vector<NIGraphNode *> nodesReadOnly;
   std::map<std::string, NIGraphNode *> idMapNode;
 
-  std::vector<std::unique_ptr<NIGraphEdge>> edges;
+  std::vector<NIGraphEdge *> edges;
   std::vector<NIGraphEdge *> edgesReadOnly;
   std::map<std::string, NIGraphEdge *> idMapEdge;
 
@@ -36,8 +36,8 @@ public:
 
   bool nodeListIsTopological(NIGraphNodeList &list);
 
-  void addNode(std::unique_ptr<NIGraphNode> node);
-  void addEdge(std::unique_ptr<NIGraphEdge> edge);
+  void addNode(NIGraphNode *node);
+  void addEdge(NIGraphEdge *edge);
 
   std::string stats();
 
