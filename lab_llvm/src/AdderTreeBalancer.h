@@ -1,24 +1,15 @@
 #ifndef ADDERTREEBALANCER_H
 #define ADDERTREEBALANCER_H
 
-#include <llvm/IR/BasicBlock.h>
-#include <llvm/IR/InstrTypes.h>
-#include <llvm/Pass.h>
-
-#include <deque>
+#include "llvm/IR/PassManager.h"
+#include "llvm/Passes/PassBuilder.h"
+#include "llvm/Passes/PassPlugin.h"
 
 namespace llvm {
 
-class AdderTreeBalancer : public FunctionPass {
+class AdderTreeBalancer : public PassInfoMixin<AdderTreeBalancer> {
 public:
-  static char ID;
-
-  AdderTreeBalancer() : FunctionPass(ID) {}
-  ~AdderTreeBalancer() {}
-
-private:
-public:
-  bool runOnFunction(Function &F) override;
+  PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
 };
 } // namespace llvm
 #endif /* ADDERTREEBALANCER_H */

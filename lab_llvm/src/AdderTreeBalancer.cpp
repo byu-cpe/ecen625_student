@@ -1,22 +1,37 @@
 #include "AdderTreeBalancer.h"
 
-#include <llvm/Transforms/Utils/BasicBlockUtils.h>
-
 using namespace llvm;
 
-char AdderTreeBalancer::ID = 0;
-
-static RegisterPass<AdderTreeBalancer> X("ATB_625", "Adder Tree Balancer Pass");
-
-bool AdderTreeBalancer::runOnFunction(Function &f) {
+PreservedAnalyses AdderTreeBalancer::run(Function &F,
+                                         FunctionAnalysisManager &AM) {
   // ADD CODE HERE
   // Add private helper functions if needed
 
-  for (auto &bb : f) {
+  // This is some demo code that will print each basic block in the function
+  // You can remove it
+  for (auto &bb : F) {
     outs() << "Hi! I'm BasicBlock " << bb.getName() << " in function "
-           << f.getName() << "\n";
+           << F.getName() << "\n";
   }
 
-  // return whether code has been modified
-  return true;
+  // Return 'none' to indicate that no analyses are preserved.
+  // This is overly conservative, but indicates to LLVM that all analyses
+  // are potentially invalidated by running this pass.
+  return PreservedAnalyses::none();
+}
+
+// This is the function that will be called by LLVM to register the pass.
+extern "C" ::llvm::PassPluginLibraryInfo LLVM_ATTRIBUTE_WEAK
+llvmGetPassPluginInfo() {
+  return {LLVM_PLUGIN_API_VERSION, "ATB_625", "v0.1", [](PassBuilder &PB) {
+            PB.registerPipelineParsingCallback(
+                [](StringRef Name, FunctionPassManager &FPM,
+                   ArrayRef<PassBuilder::PipelineElement>) {
+                  if (Name == "ATB_625") {
+                    FPM.addPass(AdderTreeBalancer());
+                    return true;
+                  }
+                  return false;
+                });
+          }};
 }

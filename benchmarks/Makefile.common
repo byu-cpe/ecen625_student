@@ -37,7 +37,7 @@ $(NAME).clang.bc: $(NAME).c
 
 # Run Adder Tree Balancer LLVM pass
 $(NAME).atb.bc: $(NAME).clang.ll $(ATB_BUILD_DIR)/ATB_625.so
-	$(OPT) -load $(ATB_BUILD_DIR)/ATB_625.so -ATB_625 -dce $(NAME).clang.bc -o $(NAME).atb.bc
+	$(OPT) -load-pass-plugin $(ATB_BUILD_DIR)/ATB_625.so -passes="ATB_625,dce" $(NAME).clang.bc -o $(NAME).atb.bc
 
 
 clang: $(NAME).clang.ll
