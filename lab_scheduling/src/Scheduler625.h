@@ -10,12 +10,9 @@ class Instruction;
 class FunctionHLS;
 class FunctionalUnits;
 
-class Scheduler625 : public llvm::FunctionPass {
+class Scheduler625 : public PassInfoMixin<Scheduler625> {
 public:
-  static char ID;
-  Scheduler625() : FunctionPass(ID) {}
-
-  bool runOnFunction(Function &F) override;
+  PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
 
 private:
   std::map<Instruction *, int> schedule;

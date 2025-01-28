@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 unsigned short lfsr = 0xACE1u;
 unsigned bit;
 
@@ -15,5 +17,10 @@ int main() {
   int sum = 0;
   for (int i = 0; i < 100; i += 1)
     sum += A[i];
-  return sum;
+
+  if (sum == 3184847)
+    printf("CORRECT\n");
+  else
+    printf("ERROR\n");
+  return 0;
 }
