@@ -2,10 +2,10 @@ ATB_BUILD_DIR = $(abspath $(PWD)/$(LEVEL)/../lab_llvm/build)
 LAB_LLVM_RESOURCES_DIR = $(abspath $(PWD)/$(LEVEL)/../lab_llvm/resources)
 SCHED_BUILD_DIR = $(abspath $(PWD)/$(LEVEL)/../lab_scheduling/build)
 
-CLANG=clang-12
-OPT=opt-12
-LLI=lli-12
-LLVM-DIS=llvm-dis-12
+CLANG=clang-18
+OPT=opt-18
+LLI=lli-18
+LLVM-DIS=llvm-dis-18
 
 ifeq ($(ASAP), 1)
 ILP_FLAG = 
