@@ -23,19 +23,30 @@ cl::opt<bool> QuietFlag("quietSched", cl::desc("Only print error messages"),
                         cl::init(false));
 cl::opt<double> PeriodOpt("period");
 
-char Scheduler625::ID = 0;
-static RegisterPass<Scheduler625> X("sched625", "HLS Scheduler for ECEN 625",
-                                    false /* Only looks at CFG? */,
-                                    true /* Analysis pass? */);
+// This is the function that will be called by LLVM to register the pass.
+extern "C" ::llvm::PassPluginLibraryInfo LLVM_ATTRIBUTE_WEAK
+llvmGetPassPluginInfo() {
+  return {LLVM_PLUGIN_API_VERSION, "sched625", "v0.1", [](PassBuilder &PB) {
+            PB.registerPipelineParsingCallback(
+                [](StringRef Name, FunctionPassManager &FPM,
+                   ArrayRef<PassBuilder::PipelineElement>) {
+                  if (Name == "sched625") {
+                    FPM.addPass(Scheduler625());
+                    return true;
+                  }
+                  return false;
+                });
+          }};
+}
 
-bool Scheduler625::runOnFunction(Function &F) {
+PreservedAnalyses Scheduler625::run(Function &F, FunctionAnalysisManager &AM) {
   // FUs = new FunctionalUnits(F);
   fHLS = new FunctionHLS(F);
 
   clockPeriodConstraint = PeriodOpt;
 
   // Loop through basic blocks
-  for (auto &bb : F.getBasicBlockList()) {
+  for (auto &bb : F) {
     if (ILPFlag)
       scheduleILP(bb);
     else
@@ -50,15 +61,16 @@ bool Scheduler625::runOnFunction(Function &F) {
 
   raw_fd_ostream scheduleRpt(scheduleRptName, EC);
   if (EC.value())
-    report_fatal_error("Could not open schedule rpt: " + scheduleRptName);
+    report_fatal_error(llvm::Twine("Could not open schedule rpt: ") +
+                       scheduleRptName);
 
   raw_fd_ostream timingRpt(timingRptName, EC);
   if (EC.value())
-    report_fatal_error("Could not open" + timingRptName);
+    report_fatal_error(llvm::Twine("Could not open") + timingRptName);
 
   raw_fd_ostream ganttRpt(ganttRptName, EC);
   if (EC.value())
-    report_fatal_error("Could not open" + ganttRptName);
+    report_fatal_error(llvm::Twine("Could not open") + ganttRptName);
 
   scheduleGlobal(F);
   reportSchedule(F, scheduleRpt);
@@ -69,7 +81,7 @@ bool Scheduler625::runOnFunction(Function &F) {
   timingRpt.close();
   ganttRpt.close();
 
-  return false;
+  return PreservedAnalyses::all();
 }
 
 void Scheduler625::reportSchedule(Function &F, raw_fd_ostream &scheduleFile) {

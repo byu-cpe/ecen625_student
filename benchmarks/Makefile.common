@@ -48,7 +48,7 @@ atb_check: $(NAME).atb.ll
 	$(LLI) $^
 
 atb_schedule: $(NAME).atb.ll
-	$(OPT) -load $(SCHEDULER_SO) -sched625 $(ILP_FLAG) $(PERIOD_OPT) $(QUIET_SCHED) $(NAME).atb.bc -o /dev/null
+	$(OPT) -load-pass-plugin $(SCHEDULER_SO) -passes="sched625" $(ILP_FLAG) $(PERIOD_OPT) $(QUIET_SCHED) $(NAME).atb.bc -o /dev/null
 
 	# Convert scheduling to Gantt chart
 	for f in *.tex; do \
@@ -56,7 +56,7 @@ atb_schedule: $(NAME).atb.ll
 	done
 
 schedule: $(NAME).clang.ll
-	$(OPT) -load $(SCHEDULER_SO) -sched625 $(ILP_FLAG) $(PERIOD_OPT) $(QUIET_SCHED) $(NAME).clang.bc -o /dev/null
+	$(OPT) -load-pass-plugin $(SCHEDULER_SO) -passes="sched625" $(ILP_FLAG) $(PERIOD_OPT) $(QUIET_SCHED) $(NAME).clang.bc -o /dev/null
 
 # Convert scheduling to Gantt chart
 	for f in *.tex; do \
