@@ -9,7 +9,7 @@ results_path = LAB_DIR_PATH / "results" / "results.csv"
 results_path.parent.mkdir(parents=True, exist_ok=True)
 
 with results_path.open("w") as f:
-    f.write("k,accuracy,fmax,bram,dsp,ff,lut\n")
+    f.write("k,accuracy,latency,fmax,bram,dsp,ff,lut\n")
 
     for k in range(1, 6):
 
@@ -48,4 +48,12 @@ with results_path.open("w") as f:
         assert m
         fmax = float(m.group(1))
 
-        f.write(f"{k},{accuracy},{fmax},{bram},{dsp},{ff},{lut}\n")
+        m = re.search(
+            r"^\+ Latency:.*?Latency \(cycles\).*?^\s+\|.*?^\s+\+.*?^\s+\|.*?\|\s+(\d+)\|",
+            txt,
+            re.MULTILINE | re.DOTALL,
+        )
+        assert m
+        latency = int(m.group(1))
+
+        f.write(f"{k},{accuracy},{latency},{fmax},{bram},{dsp},{ff},{lut}\n")
