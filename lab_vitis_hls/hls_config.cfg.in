@@ -1,0 +1,20 @@
+part=xc7z020clg400-1
+
+[hls]
+flow_target=vivado
+package.output.format=ip_catalog
+package.output.syn=false
+
+clock=10ns
+
+syn.top=digitrec
+syn.file=digitrec.cpp
+tb.file=digitrec_test.cpp
+
+tb.cflags=-DK_CONST=${K}
+syn.cflags=-DK_CONST=${K}
+
+syn.directive.inline=off update_knn
+syn.directive.inline=off knn_vote
+
+syn.compile.pipeline_loops=0
