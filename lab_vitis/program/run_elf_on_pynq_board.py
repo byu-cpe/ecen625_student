@@ -106,7 +106,9 @@ def main():
     # Notify the server of board usage
     if notify_server:
         url = "http://127.0.0.1:5000/use"
-        response = requests.post(url, json={"device": args.jtag_serial}, timeout=5)
+        response = requests.post(
+            url, json={"device": args.jtag_serial, "user": os.getlogin()}, timeout=5
+        )
         if response.ok:
             print_color(TermColors.YELLOW, "Marked device as used.")
         else:
